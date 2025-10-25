@@ -11,6 +11,10 @@ import TripDetailsScreen from "./src/screens/Supervisor/TripDetailsScreen";
 import AddTripScreen from "./src/screens/Supervisor/AddTripScreen";
 import { TripProvider } from "./src/context/TripContext";
 import TripModal from "./src/screens/Supervisor/TripModal";
+import withBackground from "./src/components/withBackground"
+import Reports from './src/screens/Reports'
+import DirectorDashboard from './src/screens/Director/DirectorDashboard'
+import DetailedShipmentReport from './src/screens/Director/DetailedShipmentReport'
 
 const Stack = createNativeStackNavigator();
 
@@ -138,32 +142,47 @@ export default function App() {
           /> */}
           <Stack.Screen 
             name="Login"
-            component={LoginScreen} 
+            component={withBackground(LoginScreen)} 
             options={{ headerShown: false }}
           />
             <Stack.Screen 
             name="Verification"
-            component={VerificationScreen} 
+            component={withBackground(VerificationScreen)} 
             options={{ headerShown: false }}
           />
           <Stack.Screen
             name="SupervisorStack"
-            component={DashboardScreen}
+            component={withBackground(DashboardScreen)}
             options={{ headerShown: false }}
           />
             <Stack.Screen
             name="TripDetails"
-            component={TripDetailsScreen}
+            component={withBackground(TripDetailsScreen)}
             options={{ headerShown: false }}
           />
           <Stack.Screen
             name="AddTrip"
-            component={AddTripScreen}
+            component={withBackground(AddTripScreen)}
             options={{ headerShown: false }}
           />
            <Stack.Screen
             name="TripModal"
             component={TripModal}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="DirectorDashboard"
+            component={withBackground(DirectorDashboard)}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="DetailedShipmentReport"
+            component={withBackground(DetailedShipmentReport)}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="reportsScreen"
+            component={withBackground(Reports)}
             options={{ headerShown: false }}
           />
           <Stack.Screen

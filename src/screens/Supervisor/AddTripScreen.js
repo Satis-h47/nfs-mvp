@@ -24,8 +24,8 @@ const AddTripScreen = ({navigation, route}) => {
     invoice: "",
     royaltyWaybill: "",
     product: "",
-    company: "",
-    agency: "",
+    clientName: "",
+    transportVendor: "",
     vehicleNumber: "",
     vehicleType: "",
     tyres: "",
@@ -38,16 +38,19 @@ const AddTripScreen = ({navigation, route}) => {
 
   // Auto fill today's date
   useEffect(() => {
-    const today = new Date();
-    const formattedDate = today.toLocaleString('en-CA', {
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hour12: false,
-});
+const today = new Date();
+
+const pad = (num) => String(num).padStart(2, '0');
+
+const day = pad(today.getDate());
+const month = pad(today.getMonth() + 1); // Months are zero-based
+const year = today.getFullYear();
+
+const hours = pad(today.getHours());
+const minutes = pad(today.getMinutes());
+const seconds = pad(today.getSeconds());
+
+const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
     setForm((prev) => ({ ...prev, date: formattedDate, source: route.params.source }));
   }, []);
 
@@ -78,11 +81,6 @@ const AddTripScreen = ({navigation, route}) => {
     }
 
   return (
-                <ImageBackground 
-          source={require('../../assets/images/rawBG.jpg')} // Path to your image
-          style={{ width, height }}
-          resizeMode="cover"
-        >
     <View style={styles.container}>
       {/* Header */}
       <Text style={styles.header}>Add Trip</Text>
@@ -108,6 +106,16 @@ const AddTripScreen = ({navigation, route}) => {
           editable={false} // auto-filled
         />
 
+                {/* Destination */}
+        <Text style={styles.label}>Destination</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter Destination"
+          placeholderTextColor="#aaa"
+          value={form.destination}
+          onChangeText={(t) => handleChange("destination", t)}
+        />
+
         {/* PO Number (optional) */}
         <Text style={styles.label}>PO Number (Optional)</Text>
         <TextInput
@@ -116,16 +124,6 @@ const AddTripScreen = ({navigation, route}) => {
           placeholderTextColor="#aaa"
           value={form.poNumber}
           onChangeText={(t) => handleChange("poNumber", t)}
-        />
-
-        {/* Destination */}
-        <Text style={styles.label}>Destination</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Destination"
-          placeholderTextColor="#aaa"
-          value={form.destination}
-          onChangeText={(t) => handleChange("destination", t)}
         />
 
         {/* Invoice / Waybill */}
@@ -159,17 +157,18 @@ const AddTripScreen = ({navigation, route}) => {
         />
 
         {/* Company */}
-        <Text style={styles.label}>Company Name</Text>
+        <Text style={styles.label}>Client Name</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter Company Name"
+          placeholder="Enter Client Name"
           placeholderTextColor="#aaa"
-          value={form.company}
-          onChangeText={(t) => handleChange("company", t)}
+          value={form.clientName}
+          onChangeText={(t) => handleChange("clientName", t)}
         />
 
-        {/* Vehicle Details */}
         <Text style={styles.sectionTitle}>Vehicle Details</Text>
+<View style={{borderWidth:1,borderColor:'#aaa',padding:15,borderRadius:5}}> 
+  {/* Vehicle Details */}
 
         <Text style={styles.label}>Agency</Text>
         <TextInput
@@ -224,7 +223,8 @@ const AddTripScreen = ({navigation, route}) => {
           value={form.quantity}
           onChangeText={(t) => handleChange("quantity", t)}
         />
-
+</View>
+       
         {/* Upload Photos */}
         <Text style={styles.sectionTitle}>Upload Vehicle Photos</Text>
         <View style={{flexDirection:'row'}}>
@@ -265,7 +265,6 @@ const AddTripScreen = ({navigation, route}) => {
         </View>
       </ScrollView>
     </View>
-    </ImageBackground>
   );
 };
 
@@ -275,7 +274,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     // backgroundColor: "#121212",
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    // backgroundColor: 'rgba(0, 0, 0, 0.5)',
     padding: 16,
     paddingBottom: 50,
   },

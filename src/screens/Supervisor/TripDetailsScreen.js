@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, FlatList, Image,Dimensions, ImageBackgrou
 import { useNavigation } from "@react-navigation/native";
 
 import { useTrips } from "../../context/TripContext";
+import GoBack from "../../components/GoBack";
 const { width, height } = Dimensions.get('window');
 const TripDetailsScreen = ({route}) => {
   const { trips, addTrip } = useTrips();
@@ -23,19 +24,33 @@ const [searchText, setSearchText] = useState('');
   // useEffect(()=>{
   //   addTrip(allTrips[0])
   // },[])
+const [clientFilterModalVisible, setClientFilterModalVisible] = useState(false);
+const [selectedClients, setSelectedClients] = useState([]);
+const [allClients, setAllClients] = useState([]);
+const [tempSelectedClients, setTempSelectedClients] = useState([]);
 
 const [selectedFilter, setSelectedFilter] = useState('All');
 const [filteredTrips, setFilteredTrips] = useState(trips);
 
 useEffect(() => {
-  if (selectedFilter === 'All') {
-    setFilteredTrips(trips);
-  } else {
-    setFilteredTrips(
-      trips.filter(trip => trip.action.toLowerCase() === selectedFilter.toLowerCase())
-    );
+  const clients = [...new Set(trips.map(trip => trip.clientName))];
+  setAllClients(clients);
+}, [trips]);
+
+
+useEffect(() => {
+  let filtered = trips;
+
+  if (selectedFilter !== 'All') {
+    filtered = filtered.filter(trip => trip.action.toLowerCase() === selectedFilter.toLowerCase());
   }
-}, [selectedFilter, trips]);
+
+  if (selectedClients.length > 0) {
+    filtered = filtered.filter(trip => selectedClients.includes(trip.clientName));
+  }
+
+  setFilteredTrips(filtered);
+}, [selectedFilter, trips, selectedClients]);
 
 
   const renderTripCard = ({ item }) => (
@@ -60,9 +75,10 @@ useEffect(() => {
         <Text style={{ color: "white", fontSize: 16 }}>{item.date}</Text>
         <Text style={{flexDirection:'row'}}>
         <Text style={{ color: "white", fontSize: 16 }}>{item.source}</Text>
-        <Text style={{ color: "white", fontSize: 16 }}> - {item.destination}</Text>
+        <Text style={{ color: "white", fontSize: 16 }}> {'=>'} {item.destination}</Text>
         </Text>
         <Text style={{ color: "white", fontSize: 16 }}>PONumber: {item.poNumber}</Text>
+        <Text style={{ color: "white", fontSize: 16 }}>Client: {item.clientName}</Text>
         <Text style={{ color: actionColors[item.action], fontSize: 16 }}>{item.action}</Text>
         </View>
       </View>
@@ -73,15 +89,12 @@ useEffect(() => {
   );
 
   return (
-                <ImageBackground 
-          source={require('../../assets/images/rawBG.jpg')} // Path to your image
-          style={{ width, height }}
-          resizeMode="cover"
-        >
     <View style={{ flex: 1,
     //  backgroundColor: "#121212", 
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    // backgroundColor: 'rgba(0, 0, 0, 0.5)',
       padding: 16 }}>
+        <View style={{flexDirection:'row',paddingVertical:10}}>
+        <GoBack navigation={navigation}/>
       {/* Header */}
       <Text
         style={{
@@ -89,12 +102,12 @@ useEffect(() => {
           fontWeight: "bold",
           color: "#ff9800",
           textAlign:'center',
-          marginTop: 25,
-          marginBottom: 25,
+          marginVertical:25
         }}
       >
         All Trip Details
       </Text>
+      </View>
 <View style={{
   flexDirection: 'row',
   justifyContent: 'space-around',
@@ -115,6 +128,25 @@ useEffect(() => {
     </TouchableOpacity>
   ))}
 </View>
+
+<TouchableOpacity
+  onPress={() => {
+    setTempSelectedClients(selectedClients); // Snapshot current selection
+    setClientFilterModalVisible(true);
+  }}
+>
+  <Text style={{ color: '#ff9800', fontWeight: 'bold', marginBottom: 10 }}>
+    Filter by Client
+  </Text>
+</TouchableOpacity>
+
+
+{selectedClients.length > 0 && (
+  <Text style={{ color: 'white', marginBottom: 10 }}>
+    Showing trips for: {selectedClients.join(', ')}
+  </Text>
+)}
+
 
       {/* Trip List */}
       <FlatList
@@ -172,8 +204,128 @@ useEffect(() => {
           />
         </TouchableOpacity>
       </View>
+
+      {clientFilterModalVisible && (
+  <View style={{
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    zIndex:2
+  }}>
+    <View style={{
+      width: '100%',
+      backgroundColor: '#333',
+      borderRadius: 10,
+      padding: 20
+    }}>
+      <Text style={{ color: 'white', fontSize: 18, marginBottom: 10 }}>Select Clients</Text>
+
+      {allClients.map((client, index) => (
+        <TouchableOpacity
+          key={index}
+onPress={() => {
+  if (tempSelectedClients.includes(client)) {
+    setTempSelectedClients(prev => prev.filter(c => c !== client));
+  } else {
+    setTempSelectedClients(prev => [...prev, client]);
+  }
+}}
+          style={{
+            flexDirection:'row',
+            paddingVertical: 10,
+            paddingHorizontal: 12,
+            marginVertical: 5,
+            borderRadius: 8,
+            backgroundColor: "#555"
+            // tempSelectedClients.includes(client) ? '#ff9800' : '#555',
+          }}
+        >
+      <View
+        style={{
+          backgroundColor: tempSelectedClients.includes(client) ? 'red' : 'white',
+          height: 20,
+          width: 20,
+          borderWidth: 1,
+          borderColor: 'black',
+          borderRadius: 2,
+          marginHorizontal: 10,
+          // justifyContent: 'center',
+          // alignItems: 'center',
+        }}
+      >
+{tempSelectedClients.includes(client) && (
+  <View style={{ position: 'relative', width: 12, height: 12 }}>
+    {/* Short arm of check */}
+    <View
+      style={{
+        position: 'absolute',
+        left: 3,
+        top: 6,
+        width: 5,
+        height: 10,
+        backgroundColor: 'white',
+        transform: [{ rotate: '-45deg' }],
+        borderRadius: 1,
+      }}
+    />
+    {/* Long arm of check */}
+    <View
+      style={{
+        position: 'absolute',
+        left: 9,
+        top: 2,
+        width: 5,
+        height: 15,
+        backgroundColor: 'white',
+        transform: [{ rotate: '45deg' }],
+        borderRadius: 1,
+      }}
+    />
+  </View>
+)}
+      </View>
+          <Text style={{ color: 'white' }}>{client}</Text>
+        </TouchableOpacity>
+      ))}
+
+      {/* Buttons */}
+      <View style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20
+      }}>
+<TouchableOpacity onPress={() => setClientFilterModalVisible(false)}>
+  <Text style={{ color: 'white' }}>Cancel</Text>
+</TouchableOpacity>
+
+<TouchableOpacity onPress={() => {
+  setSelectedClients(tempSelectedClients); // Only apply now
+  setClientFilterModalVisible(false);
+}}>
+  <Text style={{ color: '#ff9800', fontWeight: 'bold' }}>Apply</Text>
+</TouchableOpacity>
+
+
+<TouchableOpacity onPress={() => {
+  setSelectedClients([]);
+  setTempSelectedClients([]);
+  setClientFilterModalVisible(false);
+}}>
+  <Text style={{ color: 'red' }}>Reset</Text>
+</TouchableOpacity>
+
+      </View>
     </View>
-    </ImageBackground>
+  </View>
+)}
+
+    </View>
   );
 };
 

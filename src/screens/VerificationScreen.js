@@ -10,7 +10,7 @@ import {
   Image
 } from "react-native";
 import { useTrips } from "../context/TripContext";
-
+import GoBack from '../components/GoBack';
 
 const { width, height } = Dimensions.get('window');
 
@@ -68,21 +68,16 @@ export default function VerificationScreen({ navigation, route }) {
   };
 
   return (
-            <ImageBackground 
-          source={require('../assets/images/rawBG.jpg')} // Path to your image
-          style={{ width, height }}
-          resizeMode="cover"
-        >
     <View style={styles.container}>
-                <Image style={{width:100,height:100}}  source={require('../assets/images/NFS.jpg')}/>
+      <View style={{position:'absolute',left:0, top:0,margin:25}}>
+        <GoBack navigation={navigation}/>
+      </View>
+              <Image style={{width:300,height:300,position:'absolute', top:80}}  source={require('../assets/images/logo.png')}/>
         
-      <Text style={styles.logo}>NFS</Text>
+      {/* <Text style={styles.logo}>NFS</Text> */}
+      
+          {/* <Text style={{ color: "#fff", fontSize: 14 }}>Otp sent to: {email}</Text> */}
         <>
-          <Text style={{
-    color: "#fff",
-    marginBottom: 10,
-    marginTop: 15,
-  }}>Otp sent: {email}</Text>
           <Text style={styles.otpLabel}>Passcode</Text>
           <View style={styles.otpContainer}>
             {otp.map((digit, index) => (
@@ -110,19 +105,29 @@ export default function VerificationScreen({ navigation, route }) {
           <TouchableOpacity style={styles.button} onPress={verifyLogin}>
             <Text style={styles.buttonText}>Verify & Login</Text>
           </TouchableOpacity>
-                      <TouchableOpacity onPress={() => UpdateUser("Supervisor")}>
+                      <TouchableOpacity onPress={() => {
+                        UpdateUser("Supervisor")
+                        verifyLogin()
+                        }}>
               <Text style={[styles.resendText, { color: "#ff9800" }]}>
                 Supervisor View
               </Text>
             </TouchableOpacity>
-                        <TouchableOpacity onPress={() => UpdateUser("Manager")}>
+                        <TouchableOpacity onPress={() => {
+                          UpdateUser("Manager")
+                          verifyLogin()
+                          }}>
               <Text style={[styles.resendText, { color: "#ff9800" }]}>
                 Manager view
               </Text>
             </TouchableOpacity>
+                        <TouchableOpacity onPress={() => navigation.navigate("DirectorDashboard")}>
+              <Text style={[styles.resendText, { color: "#ff9800" }]}>
+                Director view
+              </Text>
+            </TouchableOpacity>
         </>
     </View>
-    </ImageBackground>
   );
 }
 
@@ -130,7 +135,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     // backgroundColor: "#000",
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    // backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: "center",
     alignItems: "center",
     padding: 20,

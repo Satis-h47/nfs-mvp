@@ -9,7 +9,7 @@ import {
   ImageBackground, Dimensions,
   Image
 } from "react-native";
-
+import BackgroundWrapper from '../components/BackgroundWrapper'
 const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }) {
@@ -24,15 +24,9 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-
-        <ImageBackground 
-      source={require('../assets/images/rawBG.jpg')} // Path to your image
-      style={{ width, height }}
-      resizeMode="cover"
-    >
     <View style={styles.container}>
-        <Image style={{width:100,height:100}}  source={require('../assets/images/NFS.jpg')}/>
-      <Text style={styles.logo}>NFS</Text>
+        <Image style={{width:300,height:300,position:'absolute', top:80}}  source={require('../assets/images/logo.png')}/>
+      {/* <Text style={styles.logo}>NFS</Text> */}
         <>
           <TextInput
             placeholder="Email Address"
@@ -46,7 +40,6 @@ export default function LoginScreen({ navigation }) {
           </TouchableOpacity>
         </>
     </View>
-    </ImageBackground>
   );
 }
 
@@ -54,7 +47,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     // backgroundColor: "#000",
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    // backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: "center",
     alignItems: "center",
     padding: 20,

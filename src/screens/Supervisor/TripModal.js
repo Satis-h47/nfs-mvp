@@ -14,6 +14,9 @@ const TripModal = ({ navigation, route }) => {
 
         {trip ? (
           Object.entries(trip).map(([key, value]) => {
+            if(key === 'id'){
+              return
+            }
   if (key === 'photoEmpty' || key === 'photoLoaded') {
     return (
       <View key={key} style={styles.detailRow}>
@@ -38,14 +41,16 @@ const TripModal = ({ navigation, route }) => {
           <Text style={styles.noData}>No trip data available</Text>
         )}
         {
-          user == "Supervisor" ?
+          user == "Supervisor" &&
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.closeButton}
         >
           <Text style={styles.closeButtonText}>Back</Text>
         </TouchableOpacity>
-        :
+        }
+        {
+        user == "Manager" &&
         <View style={{flexDirection:'row'}}>
         <TouchableOpacity
           onPress={() => {
