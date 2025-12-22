@@ -4,7 +4,9 @@ import { captureRef } from 'react-native-view-shot';
     import { generatePDF } from 'react-native-html-to-pdf';
     import RNFS from 'react-native-fs';
 
-import { BarChart, PieChart } from 'react-native-chart-kit';
+import { BarChart } from 'react-native-chart-kit';
+import PieChart from 'react-native-pie-chart';
+import { useTrips } from '../../context/TripContext';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -47,22 +49,62 @@ const pieData = [
     legendFontSize: 14,
   },
 ];
+
+const series = [
+  { value: 430, color: '#fbd203', label: { text: 'A', fontWeight: 'bold' } },
+  { value: 321, color: '#ffb300', label: { text: 'mobile', offsetY: 10, offsetX: 10 } },
+  { value: 185, color: '#ff9100', label: { text: '%22', fontSize: 8, fontStyle: 'italic', outline: 'white' } },
+  { value: 123, color: '#ff6c00' },
+]
+export default function MaterialChart({reportsDataPie, reportsDataBar}) {
+  const {theme} = useTrips();
+  const chartRefPie = useRef();
+  const chartRefBar = useRef();
+// console.log(reportsDataBar,reportsDataPie)
+  const labels = Object.keys(reportsDataBar).map(key =>
+  key
+    .replace(/([A-Z])/g, ' $1')       // add space before capital letters
+    .replace(/^./, str => str.toUpperCase()) // capitalize first letter
+    .trim()
+);
+
 const chartConfig = {
-  backgroundGradientFrom: '#ffffff',
-  backgroundGradientTo: '#ffffff',
-  fillShadowGradient: '#ffa500', // orange color
+  backgroundGradientFrom: theme.colors.card,
+  backgroundGradientTo: theme.colors.card,
+  fillShadowGradient: theme.colors.btnBack, // orange color
   fillShadowGradientOpacity: 1,
-  color: () => '#ffa500',
-  labelColor: () => '#000',
+  color: () => theme.colors.btnBack,
+  labelColor: () => theme.colors.text,
   strokeWidth: 2,
   barPercentage: 0.7,
   decimalPlaces: 0,
 };
 
-export default function MaterialChart() {
-  const chartRefPie = useRef();
-  const chartRefBar = useRef();
+// Extract values as data
+const dataValues = Object.values(reportsDataBar);
+const barData = {
+  labels: labels,
+  datasets: [
+    {
+      data: dataValues,
+    },
+  ],
+};
 
+// console.log("from api ",reportsDataBar, barData)
+
+  // const pieApiData = reportsDataPie.map(item => ({
+  //   name: item.status.replace("_", " "),
+  //   population: item.totalQuantity,
+  //   color:
+  //     item.status === "delivered" ? "#4CAF50" :
+  //     item.status === "pending" ? "#FFC107" :
+  //     item.status === "in_transit" ? "#2196F3" :
+  //     item.status === "planned" ? "#9C27B0" :
+  //     "#ccc",
+  //   legendFontColor: "#7F7F7F",
+  //   legendFontSize: 15
+  // }));
 
 const exportChartToPDF = async () => {
 
@@ -176,9 +218,9 @@ const htmlContent = `
   return (
     <View style={styles.container} >
         <View ref={chartRefBar} collapsable={false} style={styles.chartWrapper}>
-      <Text style={styles.title}>Material Management (Tonnage)</Text>            
+      <Text style={[styles.title,{color: theme.colors.text}]}>Material Management (Tonnage)</Text>            
       <BarChart
-        data={data}
+        data={barData}
         width={screenWidth - 30}
         height={300}
         yAxisLabel=""
@@ -188,13 +230,14 @@ const htmlContent = `
         verticalLabelRotation={0}
         fromZero
       />
-      <Text style={styles.xLabel}>Category</Text>
-      <Text style={styles.yLabel}>Tonnage</Text>
+      <Text style={[styles.xLabel,{color: theme.colors.text}]}>Category</Text>
+      <Text style={[styles.yLabel,{color: theme.colors.text}]}>Tonnage</Text>
 
       </View>
       <View ref={chartRefPie} collapsable={false} style={styles.chartWrapper}>
-              <PieChart
-        data={pieData}
+              {/* Using Chart kit  */}
+              {/* <PieChart
+        data={pieApiData}
         width={screenWidth - 30}
         height={240}
         chartConfig={{
@@ -203,7 +246,33 @@ const htmlContent = `
         accessor={'population'}
         backgroundColor={'transparent'}
         paddingLeft={'15'}
-      />
+        // absolute
+      /> */}
+
+      {/* Uisng Pie Chart  */}
+      <PieChart widthAndHeight={screenWidth - 30} series={reportsDataPie} />
+          <View style={{
+    marginTop: 20,
+  }}>
+      {reportsDataPie.map((item, index) => (
+        <View key={index} style={{
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 4,
+  }}>
+          <View style={[{
+    width: 16,
+    height: 16,
+    borderRadius: 4,
+    marginRight: 8,
+  }, { backgroundColor: item.color }]} />
+          <Text style={{
+    fontSize: 16,
+    color: theme.colors.text,
+  }}>{item.name}</Text>
+        </View>
+      ))}
+    </View>
       </View>
 
               <TouchableOpacity style={styles.exportButton} onPress={exportChartToPDF}>
@@ -219,13 +288,15 @@ const styles = StyleSheet.create({
     // marginTop: 50,
   },
   title: {
-    fontSize: 18,
+    fontSize: 20,
     marginBottom: 10,
+    // color: "#fff",
   },
   xLabel: {
     position: 'absolute',
     bottom: 10,
     fontSize: 14,
+    // color: "#fff",
   },
   yLabel: {
     position: 'absolute',
@@ -233,9 +304,10 @@ const styles = StyleSheet.create({
     top: 150,
     transform: [{ rotate: '-90deg' }],
     fontSize: 14,
+    // color: "#fff",
   },
   chartWrapper: {
-  backgroundColor: '#fff',
+  // backgroundColor: '#fff',
   padding: 10,
   borderRadius: 8,
   alignItems: 'center',
@@ -250,7 +322,7 @@ const styles = StyleSheet.create({
   },
   exportButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     textAlign: "center",
     fontWeight: "600",
   },

@@ -1,6 +1,7 @@
 // src/context/TripContext.js
 import React, { createContext, useContext, useState } from 'react';
-
+import {DarkTheme, LightTheme} from '../assets/themes/themes';
+import { Platform } from 'react-native';
 // Create context
 const TripContext = createContext();
 
@@ -72,18 +73,32 @@ export const TripProvider = ({ children }) => {
         }
       ];
 
-  const [trips, setTrips] = useState([...allTrips]);
+  const [trips, setTrips] = useState([]);
   const [user, setUser] = useState('Supervisor');
+  const [token, setToken] = useState('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1cy1lYXN0LTFfbG9jYWxzdGFjazphZG1pbi11c2VyLTAwMSIsImVtYWlsIjoiYWRtaW5AdHJhbmRhc3lzLmNvbSIsImdpdmVuX25hbWUiOiJTeXN0ZW0iLCJmYW1pbHlfbmFtZSI6IkFkbWluaXN0cmF0b3IiLCJjb2duaXRvOmdyb3VwcyI6WyJBZG1pbmlzdHJhdG9ycyJdLCJjb2duaXRvOnVzZXJuYW1lIjoiYWRtaW5AdHJhbmRhc3lzLmNvbSIsImN1c3RvbTplbnRpdHlBc3NpZ25tZW50cyI6IltdIiwiY3VzdG9tOmlzU3VwZXJBZG1pbiI6InRydWUiLCJpc3MiOiJodHRwczovL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tL3VzLWVhc3QtMV8xMjM0NTY3ODkiLCJhdWQiOiIxMjM0NTY3ODlhYmNkZWYiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6ImF3cy5jb2duaXRvLnNpZ25pbi51c2VyLmFkbWluIiwiYXV0aF90aW1lIjoxNzY2MDcwODUyLCJleHAiOjE3NjYxNTcyNTIsImlhdCI6MTc2NjA3MDg1Mn0.OOE0tLb8C2nPctXo1eZiugzh5uDWpLxahutcVfVQLDw');
+ const globalApi = Platform.OS === 'ios' ? 'https://g7uptifgme.execute-api.localhost.localstack.cloud:4566/api' : 'http://192.168.1.51:4566/restapis/g7uptifgme/api/_user_request_'
+// console.log(Platform.OS, globalApi)
+ const addTrip = (trip) => setTrips([trip, ...trips]);
+const deleteTrip = (id) => setTrips(trips.filter((t) => t.id !== id))
 
-  const addTrip = (trip) => setTrips([...trips, trip]);
-
-    const updateTrip = (id, updates) =>
-    setTrips(trips.map((t) => (t.id === id ? { ...t, ...updates } : t)));
+    const updateTrip = (id, updated) =>
+    setTrips(trips.map((t) => (t.id === id ? updated : t)));
     
+    const getTrip = (id) => trips.find(trip => trip.id === id)
+
     const UpdateUser = (user) => setUser(user);
 
+    const UpdateToken = (token) => setToken(token);
+
+
+  const [theme, setTheme] = useState(LightTheme);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev.dark ? LightTheme : DarkTheme);
+  };
+  
   return (
-    <TripContext.Provider value={{ trips, addTrip, user, UpdateUser, updateTrip }}>
+    <TripContext.Provider value={{theme, toggleTheme, trips, globalApi,getTrip, addTrip, setTrips, user, UpdateUser, updateTrip, token, UpdateToken, deleteTrip }}>
       {children}
     </TripContext.Provider>
   );

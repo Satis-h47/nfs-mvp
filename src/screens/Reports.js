@@ -10,7 +10,8 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import MaterialChart from "../screens/Director/MaterialChart";
-
+import GoBack from "../components/GoBack";
+import {useTrips} from '../context/TripContext'
 const TABS = ["Day", 
     // "Month", 
     "Range"];
@@ -19,9 +20,29 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-const Reports = () => {
-  const [activeTab, setActiveTab] = useState("Day");
+const colors = {
+  delivered: "#90caf9",
+  pending: "#80deea",
+  in_transit: "#ce93d8",
+  planned: "#c5e1a5",
+  draft: "#b0bec5",
+  cancelled: "#fff59d",
+  received: "#80cbc4",
+  returned: "#ffcc80",
+};
 
+function getColour() {
+  const letters = "0123456789ABCDEF";
+  let colour = "#";
+  for (let i = 0; i < 6; i++) {
+    colour += letters[Math.floor(Math.random() * 16)];
+  }
+  return colour;
+}
+
+const Reports = ({navigation}) => {
+  const [activeTab, setActiveTab] = useState('');
+const {globalApi, token, theme} = useTrips();
   // Day Tab State
   const [dayDate, setDayDate] = useState();
   const [showDayPicker, setShowDayPicker] = useState(false);
@@ -36,12 +57,156 @@ const Reports = () => {
   const [showToPicker, setShowToPicker] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 const [showChart, setShowChart] = useState(false);
-const [reportParams, setReportParams] = useState(null);
+const [reportParamsPie, setReportParamsPie] = useState(null);
+const [reportParamsBar, setReportParamsBar] = useState(null);
 const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i);
 
   const [toggle, setToggle] = useState(false);
   const [name, setName] = useState("Select site");
   const [list] = useState(["Site1", "Site2", "Site3"]);
+
+useEffect(()=>{
+  handleShowReport()
+},[])
+
+  const getReports = (from,to) => {
+    const dateFrom = encodeURIComponent(`${from} 00:00:00`);
+    const dateTo = encodeURIComponent(`${to} 23:59:59`);
+    // console.log(dateFrom,dateTo)
+  fetch(`${globalApi}/reports/material-flow?dateFrom=${dateFrom}&dateTo=${dateTo}`, {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json',
+    'Authorization': `Bearer ${token}`
+  }
+})
+  .then(response => response.json())
+  .then(data => {
+    // console.log(data.data)
+    setReportParamsPie(data.data.summary)
+    setShowChart(true)
+  })
+  .catch(error => console.error('Error:', error));
+  }
+
+    const geShipments = (from,to) => {
+    const dateFrom = encodeURIComponent(`${from} 00:00:00`);
+    const dateTo = encodeURIComponent(`${to} 23:59:59`);
+    // console.log(dateFrom,dateTo)
+  fetch(`${globalApi}/shipments`, {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json',
+    'Authorization': `Bearer ${token}`
+  }
+})
+  .then(response => response.json())
+  .then(data => {
+    // console.log(data.data)
+
+if (!data.data || data.data.length < 1) return;
+
+      const result = data.data.reduce((acc, item) => {
+  const status = item.currentStatus;
+  const qty = item.metadata?.quantity || 0;
+
+  if (!acc[status]) {
+    acc[status] = 0;
+  }
+  acc[status] += qty;
+
+  return acc;
+}, {});
+// console.log(result)
+
+      const resultPie = data.data.reduce((acc, item) => {
+  const status = item.currentStatus;
+  const qty = item.metadata?.quantity || 0;
+
+  if (!acc[status]) {
+    acc[status] = 0;
+  }
+  acc[status] += 1;
+
+  return acc;
+}, {});
+// console.log(resultPie)
+
+// Step 2: format it for charting (e.g. Chart.js or ECharts)
+const chartData = Object.entries(resultPie).map(([status, total]) => ({
+  status,
+  totalQuantity: total,
+}));
+
+// console.log(chartData)
+
+const PieData = Object.entries(resultPie).map(([status, total]) => ({
+  label: { text: ((total / data.data.length) * 100).toFixed(2) + "%", fontSize: 14 },
+  name: status,
+  value: total,
+  color: colors[status] ?? getColour()
+}));
+
+// console.log(PieData)
+
+// const groupedData = {};
+
+// // Helper function to format date
+// const formatDate = (date) => new Date(date).toISOString().split('T')[0]; // Get YYYY-MM-DD
+
+// data.data.forEach(item => {
+//     const date = formatDate(item.createdAt);
+//     const status = item.currentStatus;
+//     const volume = item.metadata.volume;
+
+//     if (!groupedData[date]) {
+//         groupedData[date] = {};
+//     }
+    
+//     if (!groupedData[date][status]) {
+//         groupedData[date][status] = 0;
+//     }
+
+//     groupedData[date][status] += volume; // Aggregate the volume
+// });
+
+// Step 2: Prepare data for Chart.js
+// const labels = Object.keys(groupedData); // Dates
+// const datasets = [];
+
+// const statuses = [...new Set(data.data.map(item => item.currentStatus))]; // Unique statuses
+
+// // Initialize dataset for each status
+// statuses.forEach(status => {
+//     const dataset = {
+//         label: status,
+//         data: labels.map(date => groupedData[date][status] || 0), // Get volume for each date (0 if no data)
+//         backgroundColor: getRandomColor(), // You can use different colors for each status
+//         stack: 'stack1'
+//     };
+//     datasets.push(dataset);
+// });
+
+// Helper function to generate random colors
+// function getRandomColor() {
+//     const letters = '0123456789ABCDEF';
+//     let color = '#';
+//     for (let i = 0; i < 6; i++) {
+//         color += letters[Math.floor(Math.random() * 16)];
+//     }
+//     return color;
+// }
+
+// console.log(groupedData);
+// console.log(datasets);
+
+    setReportParamsPie(PieData)
+    setReportParamsBar(result)
+    
+    setShowChart(true)
+  })
+  .catch(error => console.error('Error:', error));
+  }
 
   const toggleDropdown = () => {
     setToggle((prev) => !prev);
@@ -61,7 +226,7 @@ const handleShowReport = () => {
       alert("Please select a valid date.");
       return;
     }
-    payload = { type: "day", date: dayDate.toISOString().split("T")[0] };
+    payload = { type: "day", from: dayDate.toISOString().split("T")[0], to: dayDate.toISOString().split("T")[0] };
   } else if (activeTab === "Month") {
     if (selectedYear < 1900 || selectedYear > 2100) {
       alert("Please enter a valid year.");
@@ -84,10 +249,10 @@ const handleShowReport = () => {
     };
   }
 
-  console.log("📦 Show Report Payload:", payload);
-
-  setReportParams(payload); // Save for future use if needed
-  setShowChart(true); // Show the chart
+  // console.log("📦 Show Report Payload:", payload);
+geShipments(payload.from, payload.to)
+  // setReportParams(payload); // Save for future use if needed
+  // setShowChart(true); // Show the chart
 };
 
 
@@ -117,9 +282,9 @@ const handleShowReport = () => {
     />
   )}
 
-  <TouchableOpacity style={styles.showButton} onPress={handleShowReport}>
+  {/* <TouchableOpacity style={styles.showButton} onPress={handleShowReport}>
     <Text style={styles.showButtonText}>Show Report</Text>
-  </TouchableOpacity>
+  </TouchableOpacity> */}
 </View>
 
         );
@@ -164,9 +329,9 @@ const handleShowReport = () => {
     maxLength={4}
   />
 
-  <TouchableOpacity style={styles.showButton} onPress={handleShowReport}>
+  {/* <TouchableOpacity style={styles.showButton} onPress={handleShowReport}>
     <Text style={styles.showButtonText}>Show Report</Text>
-  </TouchableOpacity>
+  </TouchableOpacity> */}
 </View>
 
         );
@@ -217,9 +382,9 @@ const handleShowReport = () => {
     />
   )}
 
-  <TouchableOpacity style={styles.showButton} onPress={handleShowReport}>
+  {/* <TouchableOpacity style={styles.showButton} onPress={handleShowReport}>
     <Text style={styles.showButtonText}>Show Report</Text>
-  </TouchableOpacity>
+  </TouchableOpacity> */}
 </View>
 
         );
@@ -230,11 +395,30 @@ const handleShowReport = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.header}>Reports</Text>
+    <View style={[styles.container,{backgroundColor: theme.colors.background}]}>
 
+        <View style={{flexDirection:'row',paddingVertical:10}}>
+        <GoBack navigation={navigation}/>
+      {/* Header */}
+      <Text
+        style={{
+          fontSize: 20,
+                  paddingTop:2,
+          fontWeight: "bold",
+          color: theme.colors.btnBack,
+          textAlign:'center',
+          marginVertical:Platform.OS === 'ios' ? 25 : 0
+        }}
+      >
+        Reports
+      </Text>
+      </View>
+      {/* <View >
+        <GoBack navigation={navigation}/>
+      </View>
+      <Text style={styles.header}>Reports</Text> */}
+<ScrollView>
             <View style={{ width: "100%" }}>
-              {/* Dropdown button */}
               <TouchableOpacity
                 onPress={toggleDropdown}
                 style={styles.dropdownButton}
@@ -243,7 +427,6 @@ const handleShowReport = () => {
                 <Text style={styles.arrow}>▼</Text>
               </TouchableOpacity>
       
-              {/* Dropdown list */}
               {toggle && (
                 <View style={styles.dropdownList}>
                   {list.map((item, index) => (
@@ -259,7 +442,6 @@ const handleShowReport = () => {
               )}
             </View>
 
-      {/* Tabs */}
       <View style={styles.tabRow}>
         {TABS.map((tab) => (
           <TouchableOpacity
@@ -285,16 +467,18 @@ const handleShowReport = () => {
         ))}
       </View>
 
-      {/* Tab content */}
       <View style={styles.tabContent}>{renderTabContent()}</View>
+        <TouchableOpacity style={styles.showButton} onPress={handleShowReport}>
+    <Text style={styles.showButtonText}>Show Report</Text>
+  </TouchableOpacity>
 
 {showChart && (
   <View style={{ marginTop: 20 }}>
-    <MaterialChart filter={reportParams} />
+    <MaterialChart  reportsDataPie={reportParamsPie} reportsDataBar={reportParamsBar}/>
   </View>
 )}
-
-    </ScrollView>
+</ScrollView>
+    </View>
   );
 };
 
@@ -303,11 +487,12 @@ export default Reports;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#101010",
+    // backgroundColor: "#aaa",
+    // backgroundColor: "#292929ff",
     padding: 16,
   },
   header: {
-    color: "#fff",
+    color: "#ff9800",
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",

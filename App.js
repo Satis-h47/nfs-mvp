@@ -15,6 +15,8 @@ import withBackground from "./src/components/withBackground"
 import Reports from './src/screens/Reports'
 import DirectorDashboard from './src/screens/Director/DirectorDashboard'
 import DetailedShipmentReport from './src/screens/Director/DetailedShipmentReport'
+import AddressForm from './src/screens/Supervisor/AddressForm'
+import CameraTestScreen from './src/components/CameraTestScreen'
 
 const Stack = createNativeStackNavigator();
 
@@ -152,17 +154,22 @@ export default function App() {
           />
           <Stack.Screen
             name="SupervisorStack"
-            component={withBackground(DashboardScreen)}
+            component={DashboardScreen}
             options={{ headerShown: false }}
           />
             <Stack.Screen
             name="TripDetails"
-            component={withBackground(TripDetailsScreen)}
+            component={TripDetailsScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen
             name="AddTrip"
-            component={withBackground(AddTripScreen)}
+            component={AddTripScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="AddressForm"
+            component={AddressForm}
             options={{ headerShown: false }}
           />
            <Stack.Screen
@@ -182,7 +189,7 @@ export default function App() {
           />
           <Stack.Screen
             name="reportsScreen"
-            component={withBackground(Reports)}
+            component={Reports}
             options={{ headerShown: false }}
           />
           <Stack.Screen

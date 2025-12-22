@@ -1,5 +1,5 @@
 // LoginScreen.js
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,17 +10,19 @@ import {
   Image
 } from "react-native";
 import BackgroundWrapper from '../components/BackgroundWrapper'
+import { useTrips } from "../context/TripContext";
 const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
+  const {theme} = useTrips();
 
   const sendPasscode = async () => {
     // 🔹 Simulated API call
     // const otp = Math.floor(100000 + Math.random() * 900000).toString();
     // setSentOtp(otp)
     navigation.navigate("Verification",{email: email})
-    console.log("API: Sending OTP to", email);
+    // console.log("API: Sending OTP to", email);
   };
 
   return (
@@ -32,10 +34,10 @@ export default function LoginScreen({ navigation }) {
             placeholder="Email Address"
             value={email}
             onChangeText={setEmail}
-            style={styles.input}
-            placeholderTextColor="#aaa"
+            style={[styles.input,{backgroundColor: theme.colors.card, color: theme.colors.text, borderColor: theme.colors.border}]}
+            placeholderTextColor={theme.colors.placeholderTxt}
           />
-          <TouchableOpacity style={styles.button} onPress={sendPasscode}>
+          <TouchableOpacity style={[styles.button,{backgroundColor: theme.colors.btnBack}]} onPress={sendPasscode}>
             <Text style={styles.buttonText}>Send Passcode</Text>
           </TouchableOpacity>
         </>
@@ -61,16 +63,17 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     borderWidth: 1,
-    borderColor: "#333",
+    // borderColor: "#333",
     borderRadius: 8,
     padding: 15,
-    color: "#fff",
-    backgroundColor: "#111",
+    // color: "#fff",
+    fontSize:18,
+    // backgroundColor: "#111",
     marginBottom: 20,
   },
   button: {
     width: "100%",
-    backgroundColor: "#ff9800",
+    // backgroundColor: "#ff9800",
     padding: 15,
     borderRadius: 8,
     alignItems: "center",
@@ -78,7 +81,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
   },
   otpLabel: {

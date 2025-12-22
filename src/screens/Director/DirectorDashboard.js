@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   header: {
-    marginVertical:25,
+    marginVertical:Platform.OS === 'ios' ? 25 : 0,
     paddingVertical: 10,
     // alignItems:'center',
   },
