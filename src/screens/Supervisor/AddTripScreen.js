@@ -16,17 +16,18 @@ import { Picker } from '@react-native-picker/picker';
 import Dropdown from "../../components/Dropdown";
 import GoBack from "../../components/GoBack";
 const { width, height } = Dimensions.get('window');
-const products = [{value:'Bauxite',label:'Bauxite'},{value:'Iron',label:'Iron'},{value:'Manganese',label:'Manganese'}]
+// const products = [{value:'Bauxite',label:'Bauxite'},{value:'Iron',label:'Iron'},{value:'Manganese',label:'Manganese'}]
 const AddTripScreen = ({navigation, route}) => {
     const [destinations, setDestinations] = useState([]);
     const [clients, setClients] = useState([]);
+    const [products, setProducts] = useState([]);
     const [agencies, setAgencies] = useState([]);
     const [vehicles, setVehicles] = useState([]);
   const [selectedDestination, setSelectedDestination] = useState(null);
   const [selectedClient, setSelectedClient] = useState(route.params?.shipment ? route.params.shipment.clientName : null);
   const [selectedAgency, setSelectedAgency] = useState(null);
     const [selectedVehicle, setSelectedVehicle] = useState(null);
-    const [selectedProduct, setSelectedProduct] = useState({value:'Bauxite', label:'Bauxite'});
+    const [selectedProduct, setSelectedProduct] = useState(null);
     // console.log("Add Trip",route.params.source, selectedDestination, selectedAgency, selectedVehicle, selectedProduct)
   const { trips, addTrip, token, globalApi, updateTrip, theme } = useTrips();
   const [form, setForm] = useState({
@@ -42,7 +43,7 @@ const AddTripScreen = ({navigation, route}) => {
     transportVendor: "NFS",
     vehicleNumber: "",
     vehicleType: "",
-    tyres: route.params?.shipment?.metadata?.tyres || "",
+    tyres: "",
     capacity: "",
     quantity: route.params?.shipment?.metadata?.quantity || "10",
     photoEmpty: null,
@@ -71,7 +72,7 @@ let payload = {
     "postalCode": form.photoLoaded,
     "country": "string"
   },
-  "entityId": "f65a330f-c722-402a-8e5a-079babb1a846", //a6e086fa-ac55-4d9d-846a-76a2d4fcb2ab
+  "entityId": "3f566edf-ba9c-4f9b-9b17-a7da9b6645bf", //a6e086fa-ac55-4d9d-846a-76a2d4fcb2ab
   "sourceType": getType(),
   "sourceId": `${route.params.source.id}`,
   "destinationType": "yard",
@@ -79,18 +80,29 @@ let payload = {
       "poNumber": form.poNumber,
       "invoice": form.invoice,
       "royaltyWaybill": form.royaltyWaybill,
-      "product": selectedProduct?.value,
+      "product": selectedProduct?.name,
       "clientName": selectedClient?.name,
       "transportVendor": form.transportVendor,
-  "metadata": {
-  // "volume": 200,
-  // "priority": "low",
-  "quantity": form.quantity,
-  "tyres":form.tyres,
-  "vehicleId": selectedVehicle?.id
-  // "materialId": "577272c0-df9e-473a-a2ea-ba6f3bb383ff",
-  // "material_code": "COPPER_CONC",
-  // "scheduled_pickup": "2024-03-20T08:00:00Z"
+//   "metadata": {
+//   // "volume": 200,
+//   // "priority": "low",
+//   "quantity": form.quantity,
+//   // "tyres":form.tyres,
+//   "vehicleId": selectedVehicle?.id
+//   // "materialId": "577272c0-df9e-473a-a2ea-ba6f3bb383ff",
+//   // "material_code": "COPPER_CONC",
+//   // "scheduled_pickup": "2024-03-20T08:00:00Z"
+// },
+"metadata": {
+  "volume": Number(form.quantity),
+  "quantity": Number(form.quantity),
+  "capacity": Number(selectedVehicle?.capacity),
+  "materialId": selectedProduct?.id,
+  // "delivered_at": "2024-02-28T14:30:00Z",
+  "material_code": selectedProduct?.materialCode,
+  "tyres": selectedVehicle?.tyres,
+  "vehicleID": selectedVehicle?.id,
+  "agencyID": selectedAgency?.id
 }
 };
 
@@ -98,6 +110,7 @@ useEffect(()=>{
   getDestination();
   getClients()
   getAgencies()
+  getProducts()
 },[]);
 
 useEffect(() => {
@@ -206,6 +219,27 @@ const getClients= () => {
   .catch(error => console.error('Error:', error));
 }
 
+const getProducts= () => {
+    fetch(`${globalApi}/materials`, {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json',
+    'Authorization': `Bearer ${token}`
+  }
+})
+  .then(response => response.json())
+  .then(data => {
+    // console.log(data.data)
+    // let destList = Object.values(data.data).flat()
+//     const updatedArr = data.data?.map(item => ({
+//   value: item.name, //item.id
+//   label: item.name
+// }));
+    setProducts(data.data || [])
+  })
+  .catch(error => console.error('Error:', error));
+}
+
 const getAgencies= () => {
     fetch(`${globalApi}/agencies`, {
   method: 'GET',
@@ -237,7 +271,7 @@ const getVehicles= () => {
 })
   .then(response => response.json())
   .then(data => {
-    // console.log(data)
+    // console.log("tyres",data)
     // let destList = Object.values(data.data).flat()
 //     const updatedArr = data.data.vehicles?.map(item => ({
 //   value: item.id, //item.id
@@ -253,7 +287,7 @@ const getVehicles= () => {
 
 const postNewTrip = async (payload) => {
   try {
-    // console.log("payload",payload)
+    console.log("payload",payload)
     const response = await fetch(`${globalApi}/shipments`, {
       method: 'POST',
       headers: {
@@ -305,35 +339,35 @@ const updateNewTrip = async (payload) => {
 };
 
 const putShipment = () => {
-  console.log({
-  "originAddress": {
-    "street": "string",
-    "city": route.params.source.locality,
-    "state": route.params.source.town,
-    "postalCode": "string",
-    "country": "string"
-  },
-  "destinationAddress": {
-    "street": "string",
-    "city": selectedDestination?.locality,
-    "state": selectedDestination?.town,
-    "postalCode": form.photoLoaded,
-    "country": "string"
-  },
-  "clientName": selectedClient?.name,
-  "product": selectedProduct?.value,
-  // "destinationType": "customer",
-  "destinationId": selectedDestination?.id,
-    "metadata": {
-  // "volume": 200,
-  // "priority": "low",
-  "quantity": form.quantity,
-  "tyres":form.tyres,
-  // "materialId": "577272c0-df9e-473a-a2ea-ba6f3bb383ff",
-  // "material_code": "COPPER_CONC",
-  // "scheduled_pickup": "2024-03-20T08:00:00Z"
-}
-})
+//   console.log({
+//   "originAddress": {
+//     "street": "string",
+//     "city": route.params.source.locality,
+//     "state": route.params.source.town,
+//     "postalCode": "string",
+//     "country": "string"
+//   },
+//   "destinationAddress": {
+//     "street": "string",
+//     "city": selectedDestination?.locality,
+//     "state": selectedDestination?.town,
+//     "postalCode": form.photoLoaded,
+//     "country": "string"
+//   },
+//   "clientName": selectedClient?.name,
+//   "product": selectedProduct?.value,
+//   // "destinationType": "customer",
+//   "destinationId": selectedDestination?.id,
+//     "metadata": {
+//   // "volume": 200,
+//   // "priority": "low",
+//   "quantity": form.quantity,
+//   // "tyres":form.tyres,
+//   // "materialId": "577272c0-df9e-473a-a2ea-ba6f3bb383ff",
+//   // "material_code": "COPPER_CONC",
+//   // "scheduled_pickup": "2024-03-20T08:00:00Z"
+// }
+// })
   updateNewTrip({
   "originAddress": {
     "street": "string",
@@ -357,7 +391,7 @@ const putShipment = () => {
   // "volume": 200,
   // "priority": "low",
   "quantity": form.quantity,
-  "tyres":form.tyres,
+  // "tyres":form.tyres,
   // "materialId": "577272c0-df9e-473a-a2ea-ba6f3bb383ff",
   // "material_code": "COPPER_CONC",
   // "scheduled_pickup": "2024-03-20T08:00:00Z"
@@ -410,7 +444,7 @@ function postShipment(){
         isValid = false;
     }
         Object.keys(payload).forEach((key) => {
-      // if(key === 'poNumber' ) return
+      if(key === 'clientName' ) return
       if (!payload[key]) {
         tempErrors[key] = `${key} is required`;
         isValid = false;
@@ -418,7 +452,7 @@ function postShipment(){
     });
     if(0.8*form.capacity > form.quantity){
       // alert(`The Quantity should be atleast 80%.`);
-      tempErrors['quantity'] = 'The Quantity should be atleast 80%'
+      tempErrors['quantity'] = `The quantity should be atleast ${Math.ceil(0.8*form.capacity)}(80%).`
       isValid = false
     }
     if(!selectedAgency){
@@ -460,9 +494,41 @@ postNewTrip(payload)
   "startLocationType": getType(),
   "startLocationId": route.params.source.id,
   "endLocationType": "yard",
-  "endLocationId": selectedDestination.id
+  "endLocationId": selectedDestination.id,
+  "metadata": {
+  "volume": Number(form.quantity),
+  "quantity": Number(form.quantity),
+  "capacity": Number(selectedVehicle?.capacity),
+  "materialId": selectedProduct?.id,
+  // "delivered_at": "2024-02-28T14:30:00Z",
+  "material_code": selectedProduct?.materialCode,
+  "tyres": selectedVehicle?.tyres,
+  "vehicleID": selectedVehicle?.id,
+  "agencyID": selectedAgency?.id
+}
 })
     }).then(response => console.log(response.json()))
+
+//           fetch(`${globalApi}/shipments/${newTrip.data.id}/verification-stages`,{
+//       method: 'POST',
+//       headers: {
+//         'Accept': 'application/json',
+//         'Authorization': `Bearer ${token}`,
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify({
+//     "stageName": "Pickup Verification",
+//     "requirements": [
+//         {
+//             "id": "REQ_001",
+//             "type": "document",
+//             "description": "Upload bill of lading",
+//             "required": true
+//         }
+//     ]
+// })
+//     }).then(response => console.log("stage",response.json()))
+
          Alert.alert(
     "Shipment added",
     "Your shipment has been successfully added.",
@@ -506,10 +572,10 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
   // const fillData = vehicles.find(
   //   (item) => item.value === selectedVehicle
   // );
-    // console.log(fillData,"fill")
+    console.log(selectedVehicle,"fill")
     if(selectedVehicle === null) setForm((prev) => ({ ...prev, vehicleType: '', capacity: '' }));
     else 
-    setForm((prev) => ({ ...prev, vehicleType: selectedVehicle.vehicleType, capacity: selectedVehicle.capacity }));
+    setForm((prev) => ({ ...prev, vehicleType: selectedVehicle.vehicleType, capacity: selectedVehicle.capacity, tyres: selectedVehicle.tyres.toString() }));
   },[selectedVehicle])
 
   //   useEffect(()=>{
@@ -587,7 +653,9 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         />
 
                 {/* Destination */}
-        <Text style={[styles.label, {color: theme.colors.text}]}>Destination</Text>
+        <Text style={[styles.label, {color: theme.colors.text}]}>
+          Destination<Text style={{ color: 'red' }}> *</Text>
+          </Text>
         {/* <TextInput
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card}]}
           placeholder="Enter Destination"
@@ -638,7 +706,9 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
       />
       {/* {errors.destinationId ? <Text style={styles.error}>{errors.destinationId}</Text> : null} */}
         {/* PO Number (optional) */}
-        <Text style={[styles.label, {color: theme.colors.text}]}>PO Number</Text>
+        <Text style={[styles.label, {color: theme.colors.text}]}>
+          PO Number<Text style={{ color: 'red' }}> *</Text>
+          </Text>
         <TextInput
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card, borderWidth:1, borderColor: errors.poNumber ? 'red' : 'transparent'}]}
           placeholder="Enter PO Number"
@@ -648,7 +718,9 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         />
 
         {/* Invoice / Waybill */}
-        <Text style={[styles.label, {color: theme.colors.text}]}>Invoice / Waybill</Text>
+        <Text style={[styles.label, {color: theme.colors.text}]}>
+          Invoice / Waybill<Text style={{ color: 'red' }}> *</Text>
+          </Text>
         <TextInput
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card, borderWidth:1, borderColor: errors.invoice ? 'red' : 'transparent'}]}
           placeholder="Enter Invoice / Waybill"
@@ -659,7 +731,9 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
       {/* {errors.invoice ? <Text style={styles.error}>{errors.invoice}</Text> : null} */}
 
         {/* Royalty Waybill */}
-        <Text style={[styles.label, {color: theme.colors.text}]}>Source Mine Royalty Waybill</Text>
+        <Text style={[styles.label, {color: theme.colors.text}]}>
+          Source Mine Royalty Waybill<Text style={{ color: 'red' }}> *</Text>
+          </Text>
         <TextInput
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card, borderWidth:1, borderColor: errors.royaltyWaybill ? 'red' : 'transparent'}]}
           placeholder="Enter Royalty Waybill"
@@ -669,7 +743,8 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         />
 
         {/* Product */}
-        <Text style={[styles.label, {color: theme.colors.text}]}>Product</Text>
+        <Text style={[styles.label, {color: theme.colors.text}]}>
+          Product<Text style={{ color: 'red' }}> *</Text></Text>
         {/* <TextInput
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card, borderWidth:1, borderColor: errors.product ? 'red' : 'transparent'}]}
           placeholder="Enter Product"
@@ -679,7 +754,7 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         /> */}
             <Dropdown
         data={products}
-        keyValue={selectedProduct?.value}
+        keyValue={selectedProduct?.id}
         onChange={(val) => {
           setSelectedProduct(val)
     setErrors(prev => {
@@ -687,8 +762,8 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
       return rest;
     })
         }}
-          labelField = "label"
-  valueField = "value"
+          labelField = "materialCode"
+  valueField = "id"
         placeholder="Choose a product"
 
         dropdownStyle={{
@@ -773,7 +848,9 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
 {/* <View style={{borderWidth:1,borderColor:'#aaa',padding:15,borderRadius:5}}>  */}
   {/* Vehicle Details */}
 
-        <Text style={[styles.label, {color: theme.colors.text}]}>Agency</Text>
+        <Text style={[styles.label, {color: theme.colors.text}]}>
+          Agency<Text style={{ color: 'red' }}> *</Text>
+          </Text>
                     <Dropdown
         data={agencies}
         keyValue={selectedAgency?.id}
@@ -817,7 +894,9 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
   }}
       />
 { selectedAgency && <>
-        <Text style={[styles.label, {color: theme.colors.text}]}>Vehicle Number</Text>
+        <Text style={[styles.label, {color: theme.colors.text}]}>
+          Vehicle Number<Text style={{ color: 'red' }}> *</Text>
+          </Text>
         {/* <TextInput
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card}]}
           placeholder="Enter Vehicle Number"
@@ -880,10 +959,11 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         <Text style={[styles.label, {color: theme.colors.text}]}>Tyres</Text>
         <TextInput
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card}]}
-          placeholder="Enter Tyres"
-          placeholderTextColor = {theme.colors.placeholderTxt}
+          // placeholder="Enter Tyres"
+          // placeholderTextColor = {theme.colors.placeholderTxt}
           value={form.tyres}
-          onChangeText={(t) => handleChange("tyres", t)}
+          // onChangeText={(t) => handleChange("tyres", t)}
+          editable={false}
         />
 
         <Text style={[styles.label, {color: theme.colors.text}]}>Capacity</Text>
@@ -896,7 +976,9 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
           editable={false} // auto-filled
         />
 
-        <Text style={[styles.label, {color: theme.colors.text}]}>Quantity</Text>
+        <Text style={[styles.label, {color: theme.colors.text}]}>
+          Quantity<Text style={{ color: 'red' }}> *</Text>
+          </Text>
         <TextInput
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card}]}
           placeholder="Enter Quantity"
@@ -915,7 +997,9 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         <Text style={[styles.sectionTitle,{color: theme.colors.text}]}>Upload Vehicle Photos</Text>
         <View style={{flexDirection:'row'}}>
                     <Text style={[styles.label,{margin:5,flex:1, color: theme.colors.text}]} onPress={() => changeImage('empty')}>Without Load</Text>
-                    <Text style={[styles.label,{margin:5,flex:1, color: theme.colors.text}]} onPress={() => changeImage('load')}>With Load</Text>
+                    <Text style={[styles.label,{margin:5,flex:1, color: theme.colors.text}]} onPress={() => changeImage('load')}>
+                      With Load<Text style={{ color: 'red' }}> *</Text>
+                      </Text>
 
         </View>
         <View style={styles.uploadContainer}>

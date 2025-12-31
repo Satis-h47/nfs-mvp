@@ -16,6 +16,30 @@ const displayLabels = {
   returned:"Returned"
 }
 
+function formatTimestamp(oldTimestamp) {
+  const date = new Date(oldTimestamp);
+
+  // Format the date as DD/MM/YYYY HH:mm
+  return date.toLocaleString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false // Ensures 24-hour format
+  });
+}
+
+  const actionColors = {
+  draft : "blue",
+  pending: 'orange',
+  in_transit:"yellow",
+  delivered:"green",
+  received:"green",
+  cancelled:"red",
+  returned:"green"
+};
+
 const TripDetailsScreen = ({route}) => {
   const { trips, addTrip, token, setTrips, globalApi, theme } = useTrips();
   // const [tripData, setTripData] = useState('')
@@ -24,12 +48,6 @@ const TripDetailsScreen = ({route}) => {
   const [tab, setTab]= useState('outgoing');
 const [searchText, setSearchText] = useState('');
 // const [filteredTrips, setFilteredTrips] = useState(trips);
-
-  const actionColors = {
-  Rejected: "red",
-  Pending: "orange",
-  Approved: "green",
-};
 
   // useEffect(()=>{
   //   addTrip(allTrips[0])
@@ -83,6 +101,7 @@ async function getShipments(){
   }
 });
   const data = await response.json();
+  console.log(data?.data)
     setTrips(data?.data || []) //.filter(ship => ship.sourceId == route.params.source.id)
     // setOutGoingShip(data?.data.filter(ship => ship.sourceId == route.params.source.id) || [])
     // setIncomingShipments(data?.data.filter(ship => ship.destinationId == route.params.source.id) || [])
@@ -129,7 +148,7 @@ useEffect(() => {
           style={{ width: 24, height: 24, marginRight: 12, tintColor: theme.colors.text}}
         />
         <View>
-        <Text style={[styles.titleText,{ color: theme.colors.text}]}>{item.updatedAt}</Text>
+        <Text style={[styles.titleText,{ color: theme.colors.text}]}>{formatTimestamp(item.updatedAt)}</Text>
         <Text style={[styles.titleText,{ color: theme.colors.text}]}>{item.clientName}</Text>
         <Text style={[styles.titleText,{ color: theme.colors.text}]}>{item.product}</Text>
         <Text style={{flexDirection:'row'}}>
@@ -138,7 +157,7 @@ useEffect(() => {
         </Text>
         {/* <Text style={{ color: "white", fontSize: 16 }}>PONumber: {item.poNumber}</Text>
         <Text style={{ color: "white", fontSize: 16 }}>Client: {item.clientName}</Text> */}
-        <Text style={{ color: actionColors[item.action] || 'white', fontSize: 16 }}>{displayLabels[item.currentStatus]}</Text>
+        <Text style={{ color: actionColors[item.currentStatus], fontSize: 16 }}>{displayLabels[item.currentStatus]}</Text>
         </View>
       </View>
 

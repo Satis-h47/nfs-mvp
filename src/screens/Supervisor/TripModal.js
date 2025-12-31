@@ -58,15 +58,20 @@ const TripModal = ({ navigation, route }) => {
   const { shipment: routeShipment } = route.params || {}; // Get shipment data passed from form
 
 const [shipment, setShipment] = useState(() => route.params.shipment || null);
+
+const [legId, setLegId] = useState(null);
+
 const [listTV, setListTV] = useState(() => {
   if (user === 'Supervisor') {
     return {value:'pending', label:'Pending'};
   }
-  return route.params.shipment?.currentStatus || '';
+  return {value: route.params.shipment?.currentStatus} || '';
 });
   
   const [listOV, setListOV] = useState('draft');
       const [listThV, setListThV] = useState('in_transit');
+
+      console.log(listTV,"da", user)
 
         useEffect(() => {
     if (trips) {
@@ -74,6 +79,27 @@ const [listTV, setListTV] = useState(() => {
       setShipment(foundShipment);
     }
   }, [trips]);
+
+useEffect(() => {
+  if (!shipment?.id || !token) return;
+
+  fetch(`${globalApi}/shipments/${shipment?.id}/legs`, {
+    method: 'GET',
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then(response => response.json())
+    .then(data => {
+      const firstLegId = data?.data?.legs?.[0]?.id;
+      console.log(data, 'legId:', firstLegId);
+
+      setLegId(firstLegId);
+    })
+    .catch(error => console.error('Error:', error));
+}, []);
+
 
 const listOne = [
   // { label: 'Draft', value: 'draft', disable: false },
@@ -103,28 +129,70 @@ const listThree = [
   { label: 'Returned', value: 'returned', disable: false }
 ]
 
-const statusShipment = () => {
-    fetch(`${globalApi}/shipments/${shipment?.id}/status`, {
-  method: 'POST',
-  headers: {
-    'Accept': 'application/json',
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-  "status": `${listTV.value}`})
-})
-  .then(response => response.json())
-  .then(data => {
-    if(data?.success) {
-        //  console.log(data)
-    updateTrip(data.data.id, data.data)
+const statusShipment = async () => {
+  if (!legId) {
+    console.error('Leg ID not available yet');
+    return;
+  }
+    console.log("token", token, legId, shipment?.id)
+  try {
+    // 1️⃣ First API call
+    const res = await fetch(
+      `${globalApi}/shipments/${shipment?.id}/status`,
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: listTV.value,
+        }),
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data?.success) {
+      console.error('Error: Select valid status');
+      return;
     }
-    else console.error('Error: Select valid status')
-    // navigation.goBack()
-  })
-  .catch(error => console.error('Error:', error));
-}
+
+    // Optional update
+    updateTrip(data.data.id, data.data);
+
+    // 2️⃣ Second API call (ONLY after first succeeds)
+    const legRes = await fetch(
+      `${globalApi}/shipments/${shipment?.id}/legs/${legId}`,
+      {
+        method: 'PUT',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: listTV.value,
+        }),
+      }
+    );
+
+    const legData = await legRes.json();
+    console.log(legData, "legData")
+
+    if (!legData?.success) {
+      console.error('Error: Failed updating leg');
+      return;
+    }
+
+    // success 🎉
+    console.log('Shipment and leg updated successfully');
+
+  } catch (error) {
+    console.error('Error:', error);
+  }
+};
 
   const putShipment = () =>{
     fetch(`${globalApi}/shipments/${shipment?.id}`, {
@@ -196,7 +264,7 @@ const statusShipment = () => {
               </Text>
       </View>
       
-            
+            <ScrollView>
 {/* <View style={{marginTop:100, backgroundColor:'white',borderRadius:10, padding:20}}> */}
 <View
   style={{
@@ -437,6 +505,32 @@ const statusShipment = () => {
     containerStyle={{
       flex:1,
     }}
+                dropdownStyle={{
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+  }}
+        placeholderStyle={{
+    color: theme.colors.placeholderTxt,
+  }}
+        selectedTextStyle={{
+    color: theme.colors.secText,
+  }}
+        optionStyle={{
+    backgroundColor: theme.colors.card,
+    borderBottomColor: theme.colors.border
+  }}
+        optionTextStyle={{
+    color: theme.colors.secText,
+  }}
+  selectedOptionStyle = {{
+    backgroundColor:theme.colors.border
+  }}
+        modalContainerStyle={{
+    backgroundColor: theme.colors.background,
+  }}
+    arrowStyle={{
+    color: theme.colors.placeholderTxt
+  }}
   />
 </View>
 }
@@ -524,6 +618,7 @@ const statusShipment = () => {
           <Text style={styles.closeButtonText}>Submit</Text>
         </TouchableOpacity>
         </View>
+        </ScrollView>
     </View>
   );
 };

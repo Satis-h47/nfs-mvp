@@ -50,9 +50,10 @@ async function getMines() {
       }
     });
     const data = await response.json();
+    console.log('data mines:', data);
     setMines(data?.data || []);
   } catch (error) {
-    console.error('Error:', error);
+    console.log('Error mines:', error);
   }
 }
 

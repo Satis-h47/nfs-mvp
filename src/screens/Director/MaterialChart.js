@@ -61,12 +61,12 @@ export default function MaterialChart({reportsDataPie, reportsDataBar}) {
   const chartRefPie = useRef();
   const chartRefBar = useRef();
 // console.log(reportsDataBar,reportsDataPie)
-  const labels = Object.keys(reportsDataBar).map(key =>
-  key
-    .replace(/([A-Z])/g, ' $1')       // add space before capital letters
-    .replace(/^./, str => str.toUpperCase()) // capitalize first letter
-    .trim()
-);
+//   const labels = Object.keys(reportsDataBar).map(key =>
+//   key
+//     .replace(/([A-Z])/g, ' $1')       // add space before capital letters
+//     .replace(/^./, str => str.toUpperCase()) // capitalize first letter
+//     .trim()
+// );
 
 const chartConfig = {
   backgroundGradientFrom: theme.colors.card,
@@ -81,15 +81,15 @@ const chartConfig = {
 };
 
 // Extract values as data
-const dataValues = Object.values(reportsDataBar);
-const barData = {
-  labels: labels,
-  datasets: [
-    {
-      data: dataValues,
-    },
-  ],
-};
+// const dataValues = Object.values(reportsDataBar);
+// const barData = {
+//   labels: labels,
+//   datasets: [
+//     {
+//       data: dataValues,
+//     },
+//   ],
+// };
 
 // console.log("from api ",reportsDataBar, barData)
 
@@ -202,8 +202,18 @@ const htmlContent = `
 
     const pdf = await generatePDF(pdfOptions);
 
+const now = new Date();
+
+const timestamp =
+  now.getFullYear() + "-" +
+  String(now.getMonth() + 1).padStart(2, "0") + "-" +
+  String(now.getDate()).padStart(2, "0") + "_" +
+  String(now.getHours()).padStart(2, "0") + "-" +
+  String(now.getMinutes()).padStart(2, "0")+ "-" +
+  String(now.getSeconds()).padStart(2, "0");
+
     const appScopedPath = pdf.filePath; // Actual file path in app-specific storage
-    const downloadsPath = `${RNFS.DownloadDirectoryPath}/material.pdf`; // Public Downloads folder
+    const downloadsPath = `${RNFS.DownloadDirectoryPath}/material_${timestamp}.pdf`; // Public Downloads folder
 
     // 4. Move file to public Downloads folder
     await RNFS.moveFile(appScopedPath, downloadsPath);
@@ -220,14 +230,15 @@ const htmlContent = `
         <View ref={chartRefBar} collapsable={false} style={styles.chartWrapper}>
       <Text style={[styles.title,{color: theme.colors.text}]}>Material Management (Tonnage)</Text>            
       <BarChart
-        data={barData}
+        data={reportsDataBar}
         width={screenWidth - 30}
         height={300}
         yAxisLabel=""
         yAxisSuffix=""
         yAxisInterval={1}
         chartConfig={chartConfig}
-        verticalLabelRotation={0}
+        verticalLabelRotation={-90}
+        // horizontalLabelRotation={45}
         fromZero
       />
       <Text style={[styles.xLabel,{color: theme.colors.text}]}>Category</Text>
@@ -250,11 +261,12 @@ const htmlContent = `
       /> */}
 
       {/* Uisng Pie Chart  */}
-      <PieChart widthAndHeight={screenWidth - 30} series={reportsDataPie} />
+      {(reportsDataPie?.length > 0) &&
+      <PieChart widthAndHeight={screenWidth - 30} series={reportsDataPie} /> }
           <View style={{
     marginTop: 20,
   }}>
-      {reportsDataPie.map((item, index) => (
+      {reportsDataPie?.map((item, index) => (
         <View key={index} style={{
     flexDirection: "row",
     alignItems: "center",
