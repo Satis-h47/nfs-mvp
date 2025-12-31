@@ -213,7 +213,7 @@ const getVehicles= () => {
 
 if (selectedVehicles?.length) {
   const vehicleIds = selectedVehicles.map(a => a).join(",");
-  params.append("agencyIds", vehicleIds);
+  params.append("vehicleIds", vehicleIds);
 }
 
 // if (selectedVehicle?.id) {
@@ -340,10 +340,10 @@ getReports(payload.from, payload.to)
         return (
 <View>
       <TouchableOpacity
-        style={styles.dayDateButton}
+        style={[styles.dayDateButton,{borderColor: theme.colors.border}]}
         onPress={() => setShowDayPicker(true)}
       >
-        <Text style={styles.dateText}>
+        <Text style={[styles.dateText,{color: theme.colors.secText}]}>
           {dayDate ? dayDate.toDateString() : 'Select'}
         </Text>
 
@@ -428,10 +428,10 @@ getReports(payload.from, payload.to)
     <View style={styles.rangeContent}>
       <View style={styles.dateFilterRow}>
 <TouchableOpacity
-  style={[styles.dateButton, styles.halfWidth]}
+  style={[styles.dateButton, styles.halfWidth, {borderColor: theme.colors.border}]}
   onPress={() => setShowFromPicker(true)}
 >
-  <Text style={styles.dateText}>
+  <Text style={[styles.dateText,{color: theme.colors.secText}]}>
     {fromDate ? fromDate.toDateString() : 'From'}
   </Text>
 
@@ -442,10 +442,10 @@ getReports(payload.from, payload.to)
 </TouchableOpacity>
 
 <TouchableOpacity
-  style={[styles.dateButton, styles.halfWidth]}
+  style={[styles.dateButton, styles.halfWidth,{borderColor: theme.colors.border}]}
   onPress={() => setShowToPicker(true)}
 >
-  <Text style={styles.dateText}>
+  <Text style={[styles.dateText,{color: theme.colors.secText}]}>
     {toDate ? toDate.toDateString() : 'To'}
   </Text>
 
@@ -554,12 +554,12 @@ getReports(payload.from, payload.to)
     style={{
       padding: 12,
       borderWidth: 1,
-      borderColor: '#ccc',
+      borderColor: theme.colors.border,
       marginVertical:4,
       borderRadius: 6
     }}
   >
-    <Text>
+    <Text style={{color: theme.colors.text}}>
       {selected.length > 0 ? selectedNames : 'Choose Agency'}
     </Text>
   </TouchableOpacity>
@@ -574,7 +574,7 @@ getReports(payload.from, payload.to)
     <Pressable
       style={{
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: 'rgba(0,0,0,0.7)',
         justifyContent: 'center',
         padding: 20
       }}
@@ -583,7 +583,7 @@ getReports(payload.from, payload.to)
       {/* Stop propagation */}
       <Pressable
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: theme.colors.card,
           borderRadius: 8,
           padding: 10,
           maxHeight: '60%'
@@ -659,7 +659,7 @@ getReports(payload.from, payload.to)
   <Text
     style={{
       fontSize: 16,
-      color: '#222',
+      color: theme.colors.text,
     }}
   >
     {item.name}
@@ -668,7 +668,7 @@ getReports(payload.from, payload.to)
 
           )}
         />
-        <Text onPress={() => setVisible(false)} style={{textAlign:'right',margin:5}}>Done</Text>
+        <Text onPress={() => setVisible(false)} style={{textAlign:'right',margin:5, color: theme.colors.text}}>Done</Text>
       </Pressable>
     </Pressable>
   </Modal>
@@ -721,12 +721,12 @@ getReports(payload.from, payload.to)
       padding: 12,
       borderWidth: 1,
       marginVertical:4,
-      borderColor: '#ccc',
+      borderColor: theme.colors.border,
       borderRadius: 6,
       opacity: !selected.length > 0 ? 0.5 : 1
     }}
   >
-    <Text>
+    <Text style={{color: theme.colors.text}}>
       {selectedVehicles.length > 0 ? selectedNamesVehicles : 'Choose Vehicles'}
     </Text>
   </TouchableOpacity>
@@ -741,7 +741,7 @@ getReports(payload.from, payload.to)
     <Pressable
       style={{
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: 'rgba(0,0,0,0.7)',
         justifyContent: 'center',
         padding: 20
       }}
@@ -750,7 +750,7 @@ getReports(payload.from, payload.to)
       {/* Stop propagation */}
       <Pressable
         style={{
-          backgroundColor: '#fff',
+          backgroundColor: theme.colors.card,
           borderRadius: 8,
           padding: 10,
           maxHeight: '60%'
@@ -826,7 +826,7 @@ getReports(payload.from, payload.to)
   <Text
     style={{
       fontSize: 16,
-      color: '#222',
+      color: theme.colors.text,
     }}
   >
     {item.vehicleId}
@@ -835,7 +835,7 @@ getReports(payload.from, payload.to)
 
           )}
         />
-        <Text onPress={() => setVisibleVehicles(false)} style={{textAlign:'right',margin:5}}>Done</Text>
+        <Text onPress={() => setVisibleVehicles(false)} style={{textAlign:'right',margin:5,color: theme.colors.text}}>Done</Text>
       </Pressable>
     </Pressable>
   </Modal>
@@ -873,10 +873,10 @@ getReports(payload.from, payload.to)
   setShowChart(false)}}
       activeOpacity={0.7}
     >
-      <View style={styles.outerCircle}>
-        {activeTab === 'Day' && <View style={styles.innerCircle} />}
+      <View style={[styles.outerCircle,{borderColor: theme.colors.text}]}>
+        {activeTab === 'Day' && <View style={[styles.innerCircle,{backgroundColor: theme.colors.text}]} />}
       </View>
-      <Text style={styles.label}>Day</Text>
+      <Text style={[styles.label,{color: theme.colors.text}]}>Day</Text>
     </TouchableOpacity>
 
     {activeTab === 'Day' && (
@@ -890,10 +890,10 @@ renderTabContent()
   setShowChart(false)}}
     activeOpacity={0.7}
   >
-    <View style={styles.outerCircle}>
-      {activeTab === 'Range' && <View style={styles.innerCircle} />}
+    <View style={[styles.outerCircle,{borderColor: theme.colors.text}]}>
+      {activeTab === 'Range' && <View style={[styles.innerCircle, {backgroundColor: theme.colors.text}]} />}
     </View>
-    <Text style={styles.label}>Range</Text>
+    <Text style={[styles.label,{ color: theme.colors.text}]}>Range</Text>
   </TouchableOpacity>
 
   {activeTab === 'Range' && (
@@ -903,14 +903,14 @@ renderTabContent()
       {/* <View style={styles.tabContent}>{renderTabContent()}</View> */}
 
 
-        <TouchableOpacity style={styles.showButton} onPress={handleShowReport}>
+        <TouchableOpacity style={[styles.showButton, {backgroundColor : theme.colors.secBtn}]} onPress={handleShowReport}>
     <Text style={styles.showButtonText}>Show Report</Text>
   </TouchableOpacity>
 
 <View style={{margin:20}}></View>
 {
     reportValues &&  showChart && Object.entries(reportValues).map(([name, value])=>
-    <Text key={name} style={{margin:3,fontWeight: 'bold'}}>{name}: <Text style={{fontWeight:'300'}}>{value}</Text></Text>
+    <Text key={name} style={{margin:3,fontWeight: 'bold', color: theme.colors.text}}>{name}: <Text style={{fontWeight:'300'}}>{value}</Text></Text>
     )
 }
 {showChart && (
@@ -983,7 +983,7 @@ dateButton: {
   paddingVertical: 12,
   borderRadius: 8,
   borderWidth: 1,
-  borderColor: '#ccc',
+//   borderColor: '#ccc',
 },
 //   dateText: {
 //     color: "#fff",
@@ -1013,7 +1013,7 @@ dateButton: {
     fontWeight: "600",
   },
   showButton: {
-  backgroundColor: "skyblue",
+//   backgroundColor: "skyblue",
   paddingVertical: 12,
   borderRadius: 8,
   marginTop: 16,
@@ -1091,7 +1091,7 @@ fontSize:16,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#000',
+    // borderColor: '#000',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 8,
@@ -1104,7 +1104,7 @@ fontSize:16,
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#000',
+    // backgroundColor: '#000',
   },
   
   dayRow: {
@@ -1121,13 +1121,13 @@ fontSize:16,
     paddingVertical: 8,
     borderWidth: 1,
     borderRadius: 8,
-    borderColor: '#ccc',
+    // borderColor: '#ccc',
     minWidth: 140,
     justifyContent: 'space-between',
   },
 dateText: {
   fontSize: 14,
-  color: '#333',
+//   color: '#333',
 },
 
 halfWidth: {

@@ -51,10 +51,16 @@ const AddTripScreen = ({navigation, route}) => {
     action:"Pending"
   });
   const [errors, setErrors] = useState({});
+
 const getType = () =>{
     if(route.params.source?.mineCode) return "mine"
     else if(route.params.source?.yardCode) return "yard"
     else if(route.params.source?.customerCode) return "customer"
+  }
+
+const getDestiType = () =>{
+  if(selectedDestination?.yardCode) return "yard"
+    else if(selectedDestination?.customerCode) return "customer"
   }
 
 let payload = {
@@ -75,7 +81,7 @@ let payload = {
   "entityId": "3f566edf-ba9c-4f9b-9b17-a7da9b6645bf", //a6e086fa-ac55-4d9d-846a-76a2d4fcb2ab
   "sourceType": getType(),
   "sourceId": `${route.params.source.id}`,
-  "destinationType": "yard",
+  "destinationType": getDestiType(),
   "destinationId": selectedDestination?.id,
       "poNumber": form.poNumber,
       "invoice": form.invoice,
@@ -175,7 +181,7 @@ useEffect(() => {
 }, [selectedAgency])
 
 const getDestination = () => {
-    fetch(`${globalApi}/locations/yards`, {
+    fetch(`${globalApi}/locations`, {
   method: 'GET',
   headers: {
     'Accept': 'application/json',
@@ -184,8 +190,10 @@ const getDestination = () => {
 })
   .then(response => response.json())
   .then(data => {
-    // console.log(data.data)
-    let destList = Object.values(data.data).flat()
+    console.log(data.data)
+    // let destList = Object.values(data.data).flat()
+
+    let destList = [...data.data.yards, ...data.data.customers]
 //     const updatedArr = destList?.map(item => ({
 //   value: item.id,
 //   label: item.name,

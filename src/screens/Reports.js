@@ -36,18 +36,19 @@ const Reports = ({ navigation }) => {
           Reports
         </Text>
       </View>
-      <View style={styles.tabContainer}>
+      <View style={[styles.tabContainer ,{backgroundColor: theme.colors.border}]}>
   <TouchableOpacity
     style={[
       styles.tab,
-      activeTab === 'material' && styles.activeTab
+      activeTab === 'material' && styles.activeTab, activeTab === 'material' && {backgroundColor: theme.colors.btnBack}
     ]}
     onPress={() => setActiveTab('material')}
   >
     <Text
       style={[
-        styles.tabText,
-        activeTab === 'material' && styles.activeTabText
+        styles.tabText, {color: theme.colors.text},
+        activeTab === 'material' && styles.activeTabText,
+        activeTab === 'material' && {color: '#fff'}
       ]}
     >
       Material Reports
@@ -57,14 +58,14 @@ const Reports = ({ navigation }) => {
   <TouchableOpacity
     style={[
       styles.tab,
-      activeTab === 'agency' && styles.activeTab
+      activeTab === 'agency' && styles.activeTab,activeTab === 'agency' && {backgroundColor: theme.colors.btnBack}
     ]}
     onPress={() => setActiveTab('agency')}
   >
     <Text
       style={[
-        styles.tabText,
-        activeTab === 'agency' && styles.activeTabText
+        styles.tabText, {color: theme.colors.text},
+        activeTab === 'agency' && styles.activeTabText, activeTab === 'agency' && {color: '#fff'}
       ]}
     >
       Agency Reports
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
   flexDirection: 'row',
   borderRadius: 8,
   padding:2,
-  backgroundColor: '#eee',
+  // backgroundColor: '#eee',
   marginVertical: 10,
   overflow: 'hidden',
 },
@@ -104,17 +105,17 @@ tab: {
 },
 
 activeTab: {
-  backgroundColor: '#4A90E2',
+  // backgroundColor: '#4A90E2',
   borderRadius:8,
 },
 
 tabText: {
-  color: '#555',
+  // color: '#555',
   fontWeight: '500',
 },
 
 activeTabText: {
-  color: '#fff',
+  // color: '#fff',
   fontWeight: 'bold',
 },
 

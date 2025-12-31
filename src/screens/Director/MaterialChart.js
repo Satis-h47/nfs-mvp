@@ -159,35 +159,9 @@ const htmlContent = `
         This report provides an overview of material management, including total load, 
         in-transit materials, delivered materials, and remaining stock levels.
       </p>
-      <table>
-  <thead>
-    <tr>
-      <th>Category</th>
-      <th>Tonnage</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Total Load</td>
-      <td>10000</td>
-    </tr>
-    <tr>
-      <td>In Transit</td>
-      <td>4500</td>
-    </tr>
-    <tr>
-      <td>Delivered</td>
-      <td>4000</td>
-    </tr>
-    <tr>
-      <td>Remaining</td>
-      <td>1500</td>
-    </tr>
-  </tbody>
-</table>
       <h2>Visual Analysis</h2>
-      <img src="${uriPie}" />
       <img src="${uriBar}" />
+      <img src="${uriPie}" />
     </body>
   </html>
 `;

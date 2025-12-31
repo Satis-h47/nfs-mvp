@@ -495,18 +495,18 @@ getReports(payload.from, payload.to)
   setShowChart(false)}}
       activeOpacity={0.7}
     >
-      <View style={styles.outerCircle}>
-        {activeTab === 'Day' && <View style={styles.innerCircle} />}
+      <View style={[styles.outerCircle,{borderColor: theme.colors.text}]}>
+        {activeTab === 'Day' && <View style={[styles.innerCircle, {backgroundColor: theme.colors.text}]} />}
       </View>
-      <Text style={styles.label}>Day</Text>
+      <Text style={[styles.label,{ color: theme.colors.text}]}>Day</Text>
     </TouchableOpacity>
 
     {activeTab === 'Day' && (
       <TouchableOpacity
-        style={styles.dayDateButton}
+        style={[styles.dayDateButton,{borderColor: theme.colors.border}]}
         onPress={() => setShowDayPicker(true)}
       >
-        <Text style={styles.dateText}>
+        <Text style={[styles.dateText,{color: theme.colors.secText}]}>
           {dayDate ? dayDate.toDateString() : 'Select'}
         </Text>
 
@@ -525,10 +525,10 @@ getReports(payload.from, payload.to)
   setShowChart(false)}}
     activeOpacity={0.7}
   >
-    <View style={styles.outerCircle}>
-      {activeTab === 'Range' && <View style={styles.innerCircle} />}
+    <View style={[styles.outerCircle,{borderColor: theme.colors.text}]}>
+      {activeTab === 'Range' && <View style={[styles.innerCircle, {backgroundColor: theme.colors.text}]} />}
     </View>
-    <Text style={styles.label}>Range</Text>
+    <Text style={[styles.label,{ color: theme.colors.text}]}>Range</Text>
   </TouchableOpacity>
 
   {/* RANGE CONTENT */}
@@ -536,10 +536,10 @@ getReports(payload.from, payload.to)
     <View style={styles.rangeContent}>
       <View style={styles.dateFilterRow}>
 <TouchableOpacity
-  style={[styles.dateButton, styles.halfWidth]}
+  style={[styles.dateButton, styles.halfWidth,{borderColor: theme.colors.border}]}
   onPress={() => setShowFromPicker(true)}
 >
-  <Text style={styles.dateText}>
+  <Text style={[styles.dateText,{color: theme.colors.secText}]}>
     {fromDate ? fromDate.toDateString() : 'From'}
   </Text>
 
@@ -550,10 +550,10 @@ getReports(payload.from, payload.to)
 </TouchableOpacity>
 
 <TouchableOpacity
-  style={[styles.dateButton, styles.halfWidth]}
+  style={[styles.dateButton, styles.halfWidth,{borderColor: theme.colors.border}]}
   onPress={() => setShowToPicker(true)}
 >
-  <Text style={styles.dateText}>
+  <Text style={[styles.dateText,{color: theme.colors.secText}]}>
     {toDate ? toDate.toDateString() : 'To'}
   </Text>
 
@@ -640,7 +640,7 @@ getReports(payload.from, payload.to)
       {/* {activeTab == 'Range' && <View style={styles.tabContent}>{renderTabContent()}</View>} */}
 
 <TouchableOpacity
-  style={styles.showButton}
+  style={[styles.showButton, {backgroundColor: theme.colors.secBtn}]}
   onPress={handleShowReport}
   activeOpacity={0.8}
 >
@@ -737,7 +737,7 @@ dateButton: {
 
 dateText: {
   fontSize: 14,
-  color: '#333',
+  // color: '#333',
 },
 
 icon: {
@@ -752,7 +752,7 @@ halfWidth: {
 
 showButton: {
   marginTop: 16,
-  backgroundColor: 'skyblue', // primary color
+  // backgroundColor: 'skyblue', // primary color
   paddingVertical: 12,
   borderRadius: 10,
   alignItems: 'center',

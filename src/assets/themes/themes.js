@@ -3,6 +3,7 @@ export const LightTheme = {
   colors: {
     background: '#FFFFFF',
     btnBack: '#007AFF', //1E90FF
+    secBtn: '#5AA9FF',
     text: '#000000',
     secText: '#111111',
     camera:'#333333',
@@ -18,6 +19,7 @@ export const DarkTheme = {
   colors: {
     background: '#292929ff',
     btnBack: '#ff9800',
+    secBtn: '#FFB74D',
     text: '#FFFFFF',
     secText: '#f6f6f6',
     camera:'#e6e6e6',
