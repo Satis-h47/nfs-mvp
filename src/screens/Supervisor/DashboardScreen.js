@@ -28,7 +28,9 @@ export default function DashboardScreen({navigation}) {
   const getData = async () => {
     setIsLoading(true);
     try {
+      console.time("render")
       await Promise.all([getMines(), getYards()]);
+      console.timeEnd("render")
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -42,6 +44,7 @@ export default function DashboardScreen({navigation}) {
 
 async function getMines() {
   try {
+      console.time("mines")
     const response = await fetch(`${globalApi}/locations/mines`, {
       method: 'GET',
       headers: {
@@ -50,6 +53,7 @@ async function getMines() {
       }
     });
     const data = await response.json();
+      console.timeEnd("mines")
     console.log('data mines:', data);
     setMines(data?.data || []);
   } catch (error) {
@@ -59,6 +63,7 @@ async function getMines() {
 
    async function getYards(){
   try {
+      console.time("yards")
     const response = await fetch(`${globalApi}/locations/yards`, {
       method: 'GET',
       headers: {
@@ -67,6 +72,7 @@ async function getMines() {
       }
     });
     const data = await response.json();
+      console.timeEnd("yards")
     setYards(data?.data || []);
   } catch (error) {
     console.error('Error:', error);

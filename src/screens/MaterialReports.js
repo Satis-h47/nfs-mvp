@@ -8,6 +8,8 @@ import {
   Platform,
   ScrollView,
   Image,
+  Modal,
+  Pressable,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import MaterialChart from "./Director/MaterialChart";
@@ -90,7 +92,7 @@ useEffect(()=>{
   const getReports = (from,to) => {
     const dateFrom = encodeURIComponent(`${from} 00:00:00`);
     const dateTo = encodeURIComponent(`${to} 23:59:59`);
-    console.log(dateFrom,dateTo)
+    // console.log(dateFrom,dateTo)
   fetch(`${globalApi}/reports/management/material-flow?dateFrom=${from}&dateTo=${to}`, {
   method: 'GET',
   headers: {
@@ -100,7 +102,7 @@ useEffect(()=>{
 })
   .then(response => response.json())
   .then(data => {
-    console.log(data)
+    // console.log(data)
     if(data?.error) {console.error(data.error); return}
 if (Object.keys(data?.data?.summary.currentStatusCount).length < 1) {
       alert("No records found");
@@ -163,7 +165,7 @@ if (!data.data || data.data.length < 1) return;
 
   return acc;
 }, {});
-console.log("bar chart data",result)
+// console.log("bar chart data",result)
 
       const resultPie = data.data.reduce((acc, item) => {
   const status = item.currentStatus;
@@ -176,7 +178,7 @@ console.log("bar chart data",result)
 
   return acc;
 }, {});
-console.log(resultPie)
+// console.log(resultPie)
 
 // Step 2: format it for charting (e.g. Chart.js or ECharts)
 const chartData = Object.entries(resultPie).map(([status, total]) => ({
@@ -193,7 +195,7 @@ const PieData = Object.entries(resultPie).map(([status, total]) => ({
   color: colors[status] ?? getColour()
 }));
 
-console.log("pie chart data",PieData)
+// console.log("pie chart data",PieData)
 
 // const groupedData = {};
 
@@ -568,45 +570,140 @@ getReports(payload.from, payload.to)
   )}
 
   {/* DAY PICKER */}
-  {showDayPicker && (
+      <Modal
+      visible={showDayPicker}
+      transparent
+      animationType="fade"
+    >
+      {/* Backdrop (click outside to close) */}
+      <Pressable
+        style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          justifyContent: 'center',
+          padding: 20
+        }}
+        onPress={() => setShowDayPicker(false)}
+      >
+              <Pressable
+                style={{
+                  backgroundColor: theme.colors.card,
+                  borderRadius: 8,
+                  padding: 10,
+                  maxHeight: '60%'
+                }}
+                onPress={() => {}}
+              >
+  {/* {showDayPicker && ( */}
     <DateTimePicker
       value={dayDate || new Date()}
       mode="date"
-      display="default"
+      display="inline"
       onChange={(e, date) => {
         if (e.type === 'set' && date) setDayDate(date);
         setShowDayPicker(false);
         setShowChart(false)
       }}
     />
-  )}
+  {/* )} */}
+  </Pressable>
+  </Pressable>
+  </Modal>
 
   {/* RANGE PICKERS */}
-  {showFromPicker && (
+  {Platform.OS === 'ios' ? 
+    <Modal
+      visible={showFromPicker}
+      transparent
+      animationType="fade"
+    >
+      {/* Backdrop (click outside to close) */}
+      <Pressable
+        style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          justifyContent: 'center',
+          padding: 20
+        }}
+        onPress={() => setShowFromPicker(false)}
+      >
+              <Pressable
+                style={{
+                  backgroundColor: theme.colors.card,
+                  borderRadius: 8,
+                  padding: 10,
+                  maxHeight: '60%'
+                }}
+                onPress={() => {}}
+              >
+  {/* {showFromPicker && ( */}
     <DateTimePicker
       value={fromDate || new Date()}
       mode="date"
-      display="default"
+      display="inline"
       onChange={(e, date) => {
         if (e.type === 'set' && date) setFromDate(date);
         setShowChart(false)
         setShowFromPicker(false);
       }}
     />
-  )}
+  {/* )} */}
+  </Pressable>
+  </Pressable>
+  </Modal> 
+  :
+  showFromPicker &&
+      <DateTimePicker
+      value={fromDate || new Date()}
+      mode="date"
+      display="inline"
+      onChange={(e, date) => {
+        if (e.type === 'set' && date) setFromDate(date);
+        setShowChart(false)
+        setShowFromPicker(false);
+      }}
+    />
+    }
 
-  {showToPicker && (
+    <Modal
+      visible={showToPicker}
+      transparent
+      animationType="fade"
+    >
+      {/* Backdrop (click outside to close) */}
+      <Pressable
+        style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          justifyContent: 'center',
+          padding: 20
+        }}
+        onPress={() => setShowToPicker(false)}
+      >
+              <Pressable
+                style={{
+                  backgroundColor: theme.colors.card,
+                  borderRadius: 8,
+                  padding: 10,
+                  maxHeight: '60%'
+                }}
+                onPress={() => {}}
+              >
+  {/* {showToPicker && ( */}
     <DateTimePicker
       value={toDate || new Date()}
       mode="date"
-      display="default"
+      display="inline"
       onChange={(e, date) => {
         if (e.type === 'set' && date) setToDate(date);
         setShowToPicker(false);
         setShowChart(false)
       }}
     />
-  )}
+  {/* )} */}
+  </Pressable>
+  </Pressable>
+  </Modal>
 
 </View>
 

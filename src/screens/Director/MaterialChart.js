@@ -8,6 +8,8 @@ import { BarChart } from 'react-native-chart-kit';
 import PieChart from 'react-native-pie-chart';
 import { useTrips } from '../../context/TripContext';
 
+import Share from 'react-native-share';
+
 const screenWidth = Dimensions.get('window').width;
 
 const data = {
@@ -166,16 +168,6 @@ const htmlContent = `
   </html>
 `;
 
-
-    // 3. Generate PDF (in app-specific folder)
-    const pdfOptions = {
-      html: htmlContent,
-      fileName: 'material',
-      directory: 'Download', // App-specific Download
-    };
-
-    const pdf = await generatePDF(pdfOptions);
-
 const now = new Date();
 
 const timestamp =
@@ -186,13 +178,33 @@ const timestamp =
   String(now.getMinutes()).padStart(2, "0")+ "-" +
   String(now.getSeconds()).padStart(2, "0");
 
+    // 3. Generate PDF (in app-specific folder)
+    const pdfOptions = {
+      html: htmlContent,
+      fileName: `material_${timestamp}`,
+      directory: 'Download', // App-specific Download
+    };
+
+    const pdf = await generatePDF(pdfOptions);
+
+
     const appScopedPath = pdf.filePath; // Actual file path in app-specific storage
     const downloadsPath = `${RNFS.DownloadDirectoryPath}/material_${timestamp}.pdf`; // Public Downloads folder
 
-    // 4. Move file to public Downloads folder
-    await RNFS.moveFile(appScopedPath, downloadsPath);
+if (Platform.OS === 'android') {
+  // Real download
+  await RNFS.moveFile(appScopedPath, downloadsPath);
+  Alert.alert('Saved to Downloads');
+} else {
+  // iOS "download"
+  await Share.open({
+    url: `file://${appScopedPath}`,
+    type: 'application/pdf',
+    saveToFiles: true,
+  });
+}
 
-    Alert.alert('Success', `PDF saved to:\n${downloadsPath}`);
+    Alert.alert('Success', `PDF saved`);
   } catch (error) {
     console.error(error);
     Alert.alert('Error', 'Failed to export chart as PDF');

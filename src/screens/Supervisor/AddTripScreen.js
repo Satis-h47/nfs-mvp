@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -8,13 +8,18 @@ import {
   StyleSheet,
   Image, Dimensions,
   ImageBackground,
-  Alert
+  Alert,
+  ActivityIndicator
 } from "react-native";
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useTrips } from "../../context/TripContext";
 import { Picker } from '@react-native-picker/picker';
 import Dropdown from "../../components/Dropdown";
 import GoBack from "../../components/GoBack";
+import NetInfo from '@react-native-community/netinfo';
+import { queuePost } from '../../offline/postQueue';
+import { queuePut } from '../../offline/putQueue';
+
 const { width, height } = Dimensions.get('window');
 // const products = [{value:'Bauxite',label:'Bauxite'},{value:'Iron',label:'Iron'},{value:'Manganese',label:'Manganese'}]
 const AddTripScreen = ({navigation, route}) => {
@@ -28,7 +33,19 @@ const AddTripScreen = ({navigation, route}) => {
   const [selectedAgency, setSelectedAgency] = useState(null);
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
-    // console.log("Add Trip",route.params.source, selectedDestination, selectedAgency, selectedVehicle, selectedProduct)
+    // console.log("Add Trip",route.params.source, route.params?.shipment)
+
+      const [isLoading, setIsLoading] = useState(true);
+
+
+        const scrollRef = useRef(null);
+
+  const destRef = useRef(null);
+    const PORef = useRef(null);
+      const invoiceRef = useRef(null);
+        const waybillRef = useRef(null);
+          const productRef = useRef(null);
+
   const { trips, addTrip, token, globalApi, updateTrip, theme } = useTrips();
   const [form, setForm] = useState({
     id: trips.length+1 || 1,
@@ -45,7 +62,7 @@ const AddTripScreen = ({navigation, route}) => {
     vehicleType: "",
     tyres: "",
     capacity: "",
-    quantity: route.params?.shipment?.metadata?.quantity || "10",
+    quantity: route.params?.shipment?.metadata?.quantity.toString() || "10",
     photoEmpty: null,
     photoLoaded: route.params?.shipment?.destinationAddress.postalCode || null,
     action:"Pending"
@@ -113,10 +130,26 @@ let payload = {
 };
 
 useEffect(()=>{
-  getDestination();
-  getClients()
-  getAgencies()
-  getProducts()
+  const getData = async () => {
+    setIsLoading(true)
+    try{
+      console.time("AllDropdownFetch")
+      await Promise.all([getDestination(), getClients(), getAgencies(), getProducts()]);
+      console.timeEnd("AllDropdownFetch")
+    }
+    catch (error) {
+      console.error("Error fetching data:", error);
+    }
+    finally{
+    setIsLoading(false);
+  }
+  }
+  // getDestination();
+  // getClients()
+  // getAgencies()
+  // getProducts()
+
+  getData()
 },[]);
 
 useEffect(() => {
@@ -137,30 +170,31 @@ useEffect(() => {
 
   useEffect(() => {
     if (route.params?.shipment) {
-      const foundExist = products.find(item => item.value === route.params?.shipment.product);
+      const foundExist = products.find(item => item.name === route.params?.shipment.product);
       // console.log('foundExist', foundExist)
       setSelectedProduct(foundExist)
     }
   }, [products]);
 
     useEffect(() => {
+      // console.log("vehicleId", route.params?.shipment.metadata.vehicleID, route.params?.shipment.metadata.vehicleID)
     if (route.params?.shipment) {
       // const foundExist = agencies.find(item => item.value === route.params?.shipment.product);
       // console.log('foundExist', foundExist)
       // setSelectedProduct(foundExist)
-      fetch(`${globalApi}/vehicles/${route.params?.shipment.metadata.vehicleId}/agency`,{
+      fetch(`${globalApi}/vehicles/${route.params?.shipment.metadata.vehicleID}/agency`,{
         headers:{
           Authorization: `Bearer ${token}`
         }
       })
       .then(res => res.json())
       .then(data => {
-        console.log(data)
+        // console.log(data)
         const tempArr = {
           id: data.data.currentAgency.agencyId,
           name: data.data.currentAgency.agencyName
         }
-        console.log(tempArr)
+        // console.log("tempArr", tempArr)
         setSelectedAgency(tempArr)
         setSelectedVehicle(data.data)
       })
@@ -176,7 +210,8 @@ useEffect(() => {
   // }, [vehicles]);
 
 useEffect(() => {
-  if(selectedAgency == null) console.log("null vehicles")
+  if(selectedAgency == null) { //console.log("null vehicles") 
+    }
   else getVehicles();
 }, [selectedAgency])
 
@@ -190,7 +225,7 @@ const getDestination = () => {
 })
   .then(response => response.json())
   .then(data => {
-    console.log(data.data)
+    // console.log(data.data)
     // let destList = Object.values(data.data).flat()
 
     let destList = [...data.data.yards, ...data.data.customers]
@@ -295,7 +330,7 @@ const getVehicles= () => {
 
 const postNewTrip = async (payload) => {
   try {
-    console.log("payload",payload)
+    // console.log("payload",payload)
     const response = await fetch(`${globalApi}/shipments`, {
       method: 'POST',
       headers: {
@@ -346,7 +381,7 @@ const updateNewTrip = async (payload) => {
   }
 };
 
-const putShipment = () => {
+const putShipment = async () => {
 //   console.log({
 //   "originAddress": {
 //     "street": "string",
@@ -376,7 +411,8 @@ const putShipment = () => {
 //   // "scheduled_pickup": "2024-03-20T08:00:00Z"
 // }
 // })
-  updateNewTrip({
+
+const updatePayload = {
   "originAddress": {
     "street": "string",
     "city": route.params.source.locality,
@@ -395,16 +431,39 @@ const putShipment = () => {
   "product": selectedProduct?.value,
   // "destinationType": "customer",
   "destinationId": selectedDestination?.id,
-    "metadata": {
-  // "volume": 200,
-  // "priority": "low",
-  "quantity": form.quantity,
-  // "tyres":form.tyres,
-  // "materialId": "577272c0-df9e-473a-a2ea-ba6f3bb383ff",
-  // "material_code": "COPPER_CONC",
-  // "scheduled_pickup": "2024-03-20T08:00:00Z"
+  "metadata": {
+  "volume": Number(form.quantity),
+  "quantity": Number(form.quantity),
+  "capacity": Number(selectedVehicle?.capacity),
+  "materialId": selectedProduct?.id,
+  // "delivered_at": "2024-02-28T14:30:00Z",
+  "material_code": selectedProduct?.materialCode,
+  "tyres": selectedVehicle?.tyres,
+  "vehicleID": selectedVehicle?.id,
+  "agencyID": selectedAgency?.id
 }
-})
+}
+
+  const netInfo = await NetInfo.fetch();
+
+  if (!netInfo.isConnected) {
+    updateTrip( route.params.shipment.id , {id: route.params.shipment.id , ...updatePayload, currentStatus: route.params.shipment.currentStatus})
+    queuePut(route.params.shipment.id, updatePayload);
+                 Alert.alert(
+    "Shipment updated",
+    "Your shipment has been successfully updated.",
+    [
+      {
+        text: "OK",
+        onPress: () => navigation.goBack(), // only goes back after pressing OK
+      },
+    ],
+    { cancelable: false }
+  );
+return
+  }
+
+  updateNewTrip(updatePayload)
       .then((newTrip) => {
         // console.log("updated trip",newTrip)
         // addTrip(newTrip.data);
@@ -426,7 +485,7 @@ const putShipment = () => {
       });
 }
 
-function postShipment(){
+async function postShipment(){
 //   for (let key in payload) {
 //   if (payload.hasOwnProperty(key)) {
 //     // if(form.quantity < 8){
@@ -444,6 +503,17 @@ function postShipment(){
 //     }
 //   }
 // }
+const scrollToField = (ref) => {
+  ref.current.measureLayout(
+    scrollRef.current,
+    (x, y) => {
+      scrollRef.current.scrollTo({ y: y - 25, animated: true });
+      // ref.current.focus();
+    }
+  );
+};
+
+
   const validate = () => {
     let isValid = true;
     let tempErrors = {};
@@ -473,12 +543,64 @@ function postShipment(){
     }
     setErrors(tempErrors);
     // console.log(tempErrors)
-    return isValid;
+    return tempErrors;
   };
+const validationErrors = validate()
 
-    if (!validate()) return
+  if (Object.keys(validationErrors).length > 0) {
+    if (validationErrors.destinationId) {
+      scrollToField(destRef);
+    } else if (validationErrors.poNumber) {
+      scrollToField(PORef);
+    } else if (validationErrors.invoice) {
+      scrollToField(invoiceRef);
+    } else if (validationErrors.royaltyWaybill) {
+      scrollToField(waybillRef);
+    } else if (validationErrors.product) {
+      scrollToField(productRef);
+    }
+    return;
+  }
+  
+const forLeg = {
+  "vehicleId": selectedVehicle.id,
+  "startLocationType": getType(),
+  "startLocationId": route.params.source.id,
+  "endLocationType": "yard",
+  "endLocationId": selectedDestination.id,
+  "metadata": {
+  "volume": Number(form.quantity),
+  "quantity": Number(form.quantity),
+  "capacity": Number(selectedVehicle?.capacity),
+  "materialId": selectedProduct?.id,
+  // "delivered_at": "2024-02-28T14:30:00Z",
+  "material_code": selectedProduct?.materialCode,
+  "tyres": selectedVehicle?.tyres,
+  "vehicleID": selectedVehicle?.id,
+  "agencyID": selectedAgency?.id
+}
+}
 
-// console.log(payload)
+  const netInfo = await NetInfo.fetch();
+
+  if (!netInfo.isConnected) {
+      addTrip({...payload, currentStatus: "draft"});
+    queuePost(payload, forLeg);
+             Alert.alert(
+    "Shipment added",
+    "Your shipment has been successfully added.",
+    [
+      {
+        text: "OK",
+        onPress: () => navigation.goBack(), // only goes back after pressing OK
+      },
+    ],
+    { cancelable: false }
+  );
+return
+  }
+// console.log(payload, forLeg)
+
 postNewTrip(payload)
       .then((newTrip) => {
         // console.log("added trip",newTrip, selectedDestination)
@@ -497,24 +619,7 @@ postNewTrip(payload)
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-  "vehicleId": selectedVehicle.id,
-  "startLocationType": getType(),
-  "startLocationId": route.params.source.id,
-  "endLocationType": "yard",
-  "endLocationId": selectedDestination.id,
-  "metadata": {
-  "volume": Number(form.quantity),
-  "quantity": Number(form.quantity),
-  "capacity": Number(selectedVehicle?.capacity),
-  "materialId": selectedProduct?.id,
-  // "delivered_at": "2024-02-28T14:30:00Z",
-  "material_code": selectedProduct?.materialCode,
-  "tyres": selectedVehicle?.tyres,
-  "vehicleID": selectedVehicle?.id,
-  "agencyID": selectedAgency?.id
-}
-})
+      body: JSON.stringify(forLeg)
     }).then(response => console.log(response.json()))
 
 //           fetch(`${globalApi}/shipments/${newTrip.data.id}/verification-stages`,{
@@ -580,7 +685,7 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
   // const fillData = vehicles.find(
   //   (item) => item.value === selectedVehicle
   // );
-    console.log(selectedVehicle,"fill")
+    // console.log(selectedVehicle,"fill")
     if(selectedVehicle === null) setForm((prev) => ({ ...prev, vehicleType: '', capacity: '' }));
     else 
     setForm((prev) => ({ ...prev, vehicleType: selectedVehicle.vehicleType, capacity: selectedVehicle.capacity, tyres: selectedVehicle.tyres.toString() }));
@@ -618,9 +723,9 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         const result = await launchImageLibrary(options);
 
         if (result.didCancel) {
-            console.log('User cancelled image picker');
+            // console.log('User cancelled image picker');
         } else if (result.error) {
-            console.log('ImagePicker Error: ', result.error);
+            // console.log('ImagePicker Error: ', result.error);
         } else {
             const localImagePath = result.assets[0].uri;
             if(verb == "empty") handleChange("photoEmpty",localImagePath)
@@ -639,7 +744,14 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
       }
       </View>
       {/* Form */}
-      <ScrollView showsVerticalScrollIndicator={false}>
+
+      {isLoading ? 
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+              <ActivityIndicator size="small" color={theme.colors.btnBack} />
+            {/* <Text style={{color:theme.colors.text}}>Loading...</Text> */}
+            </View>
+            :
+      <ScrollView ref={scrollRef} showsVerticalScrollIndicator={false}>
 
         {/* Date */}
         <Text style={[styles.label, {color: theme.colors.text}]}>Date</Text>
@@ -661,7 +773,7 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         />
 
                 {/* Destination */}
-        <Text style={[styles.label, {color: theme.colors.text}]}>
+        <Text ref={destRef} style={[styles.label, {color: theme.colors.text}]}>
           Destination<Text style={{ color: 'red' }}> *</Text>
           </Text>
         {/* <TextInput
@@ -717,7 +829,7 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         <Text style={[styles.label, {color: theme.colors.text}]}>
           PO Number<Text style={{ color: 'red' }}> *</Text>
           </Text>
-        <TextInput
+        <TextInput ref={PORef}
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card, borderWidth:1, borderColor: errors.poNumber ? 'red' : 'transparent'}]}
           placeholder="Enter PO Number"
           placeholderTextColor = {theme.colors.placeholderTxt}
@@ -729,7 +841,7 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         <Text style={[styles.label, {color: theme.colors.text}]}>
           Invoice / Waybill<Text style={{ color: 'red' }}> *</Text>
           </Text>
-        <TextInput
+        <TextInput ref={invoiceRef}
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card, borderWidth:1, borderColor: errors.invoice ? 'red' : 'transparent'}]}
           placeholder="Enter Invoice / Waybill"
           placeholderTextColor = {theme.colors.placeholderTxt}
@@ -742,7 +854,7 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         <Text style={[styles.label, {color: theme.colors.text}]}>
           Source Mine Royalty Waybill<Text style={{ color: 'red' }}> *</Text>
           </Text>
-        <TextInput
+        <TextInput ref={waybillRef}
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card, borderWidth:1, borderColor: errors.royaltyWaybill ? 'red' : 'transparent'}]}
           placeholder="Enter Royalty Waybill"
           placeholderTextColor = {theme.colors.placeholderTxt}
@@ -751,7 +863,7 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         />
 
         {/* Product */}
-        <Text style={[styles.label, {color: theme.colors.text}]}>
+        <Text ref={productRef} style={[styles.label, {color: theme.colors.text}]}>
           Product<Text style={{ color: 'red' }}> *</Text></Text>
         {/* <TextInput
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card, borderWidth:1, borderColor: errors.product ? 'red' : 'transparent'}]}
@@ -805,7 +917,7 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         <Text style={[styles.label, {color: theme.colors.text}]}>Client Name</Text>
                     <Dropdown
         data={clients}
-        keyValue={selectedClient?.name}
+        keyValue={selectedClient?.id}
         onChange={(val) => {
           setSelectedClient(val)
     setErrors(prev => {
@@ -814,7 +926,7 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
     })
         }}
           labelField = "name"
-  valueField = "name"
+  valueField = "id"
         placeholder="Choose a client"
 
         dropdownStyle={{
@@ -988,11 +1100,14 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
           Quantity<Text style={{ color: 'red' }}> *</Text>
           </Text>
         <TextInput
+        keyboardType="numeric"
           style={[styles.input,{color: theme.colors.secText, backgroundColor: theme.colors.card}]}
           placeholder="Enter Quantity"
           placeholderTextColor = {theme.colors.placeholderTxt}
           value={form.quantity}
-          onChangeText={(t) => handleChange("quantity", t)}
+          onChangeText={(t) => {
+    const numbersOnly = t.replace(/[^0-9.]/g, "");
+    handleChange("quantity", numbersOnly)}}
         />
         {errors.quantity && <Text style={styles.error}>{errors.quantity}</Text>}
       </>
@@ -1043,6 +1158,7 @@ const formattedDate = `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
         </TouchableOpacity>
         </View>
       </ScrollView>
+}
     </View>
   );
 };

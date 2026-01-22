@@ -17,6 +17,8 @@ import DirectorDashboard from './src/screens/Director/DirectorDashboard'
 import DetailedShipmentReport from './src/screens/Director/DetailedShipmentReport'
 import AddressForm from './src/screens/Supervisor/AddressForm'
 import CameraTestScreen from './src/components/CameraTestScreen'
+import { useNetworkSync } from './src/hooks/useNetworkSync';
+import {SyncLoader} from './src/components/SyncLoader';
 
 const Stack = createNativeStackNavigator();
 
@@ -132,9 +134,10 @@ function ManagerStack() {
   );
 }
 
-export default function App() {
+function AppInner() {
+  useNetworkSync();
+
   return (
-    <TripProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Login">
           {/* <Stack.Screen 
@@ -199,6 +202,14 @@ export default function App() {
           />
         </Stack.Navigator>
       </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <TripProvider>
+      <SyncLoader />
+      <AppInner />
     </TripProvider>
   );
 }

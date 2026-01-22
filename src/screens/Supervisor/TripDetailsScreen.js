@@ -33,7 +33,7 @@ function formatTimestamp(oldTimestamp) {
   const actionColors = {
   draft : "blue",
   pending: 'orange',
-  in_transit:"yellow",
+  in_transit:"orange",
   delivered:"green",
   received:"green",
   cancelled:"red",
@@ -41,7 +41,7 @@ function formatTimestamp(oldTimestamp) {
 };
 
 const TripDetailsScreen = ({route}) => {
-  const { trips, addTrip, token, setTrips, globalApi, theme } = useTrips();
+  const { trips, addTrip, token, setTrips, globalApi, theme, lastSyncAt } = useTrips();
   // const [tripData, setTripData] = useState('')
   const navigation = useNavigation();
   let Url = "https://img.icons8.com/ios/100/000000/warehouse.png";
@@ -64,6 +64,8 @@ const [incomingShipments, setIncomingShipments] = useState([]);
 const [outGoingShip, setOutGoingShip] = useState([]);
 
   const [isLoading, setIsLoading] = useState(true);
+const [dataReady, setDataReady] = useState(false);
+
 // console.log("trips", filteredTrips)
   useEffect(() => {
     const getData = async () => {
@@ -82,6 +84,12 @@ const [outGoingShip, setOutGoingShip] = useState([]);
   }, [token]);
 
     useEffect(() => {
+    if (lastSyncAt) {
+      getShipments();
+    }
+  }, [lastSyncAt]);
+
+    useEffect(() => {
       setOutGoingShip(trips.filter(ship => ship.sourceId == route.params.source.id));
       setIncomingShipments(trips.filter(ship => ship.destinationId == route.params.source.id))
   }, [trips]);
@@ -93,7 +101,8 @@ useEffect(() => {
 
 async function getShipments(){
   try {
-  const response = await fetch(`${globalApi}/shipments?sortOrder=DESC`, {
+    console.time("shipments")
+  const response = await fetch(`${globalApi}/shipments?sortOrder=DESC&limit=100`, {
   method: 'GET',
   headers: {
     'Accept': 'application/json',
@@ -101,6 +110,7 @@ async function getShipments(){
   }
 });
   const data = await response.json();
+  console.timeEnd("shipments")
   console.log(data?.data)
     setTrips(data?.data || []) //.filter(ship => ship.sourceId == route.params.source.id)
     // setOutGoingShip(data?.data.filter(ship => ship.sourceId == route.params.source.id) || [])
@@ -109,6 +119,14 @@ async function getShipments(){
     console.error('Error:', error);
   }
   }
+
+  const getJoinedClientNames = (clients) => {
+  return clients
+    .map(name => name?.trim() ? name : '#')
+    .join(', ');
+};
+
+const joinedNames = getJoinedClientNames(selectedClients);
 
 useEffect(() => {
   let filtered = outGoingShip;
@@ -126,6 +144,7 @@ useEffect(() => {
 
   setFilteredTrips(filtered);
   setInFilteredTrips(inFiltered)
+  setDataReady(true);
 }, [selectedFilter, outGoingShip, incomingShipments, selectedClients]);
 
 
@@ -149,7 +168,7 @@ useEffect(() => {
         />
         <View>
         <Text style={[styles.titleText,{ color: theme.colors.text}]}>{formatTimestamp(item.updatedAt)}</Text>
-        <Text style={[styles.titleText,{ color: theme.colors.text}]}>{item.clientName}</Text>
+        {item.clientName && <Text style={[styles.titleText,{ color: theme.colors.text}]}>{item.clientName}</Text>}
         <Text style={[styles.titleText,{ color: theme.colors.text}]}>{item.product}</Text>
         <Text style={{flexDirection:'row'}}>
         <Text style={[styles.titleText,{ color: theme.colors.text}]}>{item.originAddress.state}</Text>
@@ -275,14 +294,14 @@ useEffect(() => {
 
 {selectedClients.length > 0 && (
   <Text style={{ color: theme.colors.text, marginBottom: 10 }}>
-    Showing trips for: {selectedClients.join(', ')}
+    Showing trips for: {joinedNames}
   </Text>
 )}
 
 
 {  tab == 'outgoing' &&    <View style={{}}>
       {/* Trip List */}
-          { isLoading ?  <View style={{ flex: 1,paddingVertical:40, justifyContent: 'center', alignItems: 'center' }}>
+          { isLoading || !dataReady  ?  <View style={{ flex: 1,paddingVertical:40, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="small" color={theme.colors.btnBack} />
         {/* <Text style={{color:'white'}}>Loading...</Text> */}
         </View> :
@@ -450,7 +469,7 @@ onPress={() => {
   </View>
 )}
       </View>
-          <Text style={{ color: theme.colors.secText, fontSize: 14 }}>{client}</Text>
+          <Text style={{ color: theme.colors.secText, fontSize: 14 }}>{client ? client : '#'}</Text>
         </TouchableOpacity>
       ))}
 

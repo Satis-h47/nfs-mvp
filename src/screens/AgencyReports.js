@@ -17,6 +17,7 @@ import MaterialChart from "./Director/MaterialChart";
 import GoBack from "../components/GoBack";
 import {useTrips} from '../context/TripContext'
 import Dropdown from '../components/Dropdown'
+import ReuDatePicker from '../components/ReuDatePicker'
 
 const TABS = ["Day", 
     // "Month", 
@@ -241,7 +242,7 @@ const url = `${globalApi}/reports/vehicle-agency/vehicle-agency-flow${
   params.toString() ? `?${params.toString()}` : ""
 }`;
 
-console.log('url', url)
+// console.log('url', url)
     // console.log(`${globalApi}/reports/vehicle-agency/vehicle-agency-flow?vehicleIds=${selectedVehicle?.id}&dateFrom=${from}&dateTo=${to}&agencyIds=${selectedAgency?.id}`)
   fetch(url, {
   method: 'GET',
@@ -252,7 +253,7 @@ console.log('url', url)
 })
   .then(response => response.json())
   .then(data => {
-    console.log(data)
+    // console.log(data)
     if(data?.error) {console.error(data.error); return}
 if (Object.keys(!data?.data || data?.data?.summary).length < 1) {
       alert("No records found");
@@ -353,7 +354,7 @@ getReports(payload.from, payload.to)
         />
       </TouchableOpacity>
 
-  {showDayPicker && (
+  {/* {showDayPicker && (
     <DateTimePicker
       value={dayDate ? dayDate : new Date()}
       mode="date"
@@ -366,7 +367,17 @@ getReports(payload.from, payload.to)
         setShowChart(false)
       }}
     />
-  )}
+  )} */}
+
+  <ReuDatePicker
+  visible={showDayPicker}
+  value={dayDate}
+  onChange={(date) => {
+    setDayDate(date);
+    setShowChart(false);
+  }}
+  onClose={() => setShowDayPicker(false)}
+/>
 
   {/* <TouchableOpacity style={styles.showButton} onPress={handleShowReport}>
     <Text style={styles.showButtonText}>Show Report</Text>
@@ -457,35 +468,26 @@ getReports(payload.from, payload.to)
 
       </View>
     </View>
-  {showFromPicker && (
-    <DateTimePicker
-      value={fromDate ? fromDate : new Date()}
-      mode="date"
-      display="default"
-      onChange={(e, date) => {
-        if (e.type === "set" && date) {
-          setFromDate(date);
-        }
-        setShowFromPicker(false);
-        setShowChart(false)
-      }}
-    />
-  )}
 
-  {showToPicker && (
-    <DateTimePicker
-      value={toDate ? toDate : new Date()}
-      mode="date"
-      display="default"
-      onChange={(e, date) => {
-        if (e.type === "set" && date) {
-          setToDate(date);
-        }
-        setShowToPicker(false);
-        setShowChart(false)
-      }}
-    />
-  )}
+<ReuDatePicker
+  visible={showFromPicker}
+  value={fromDate}
+  onChange={(date) => {
+    setFromDate(date);
+    setShowChart(false);
+  }}
+  onClose={() => setShowFromPicker(false)}
+/>
+
+    <ReuDatePicker
+  visible={showToPicker}
+  value={toDate}
+  onChange={(date) => {
+    setToDate(date);
+    setShowChart(false);
+  }}
+  onClose={() => setShowToPicker(false)}
+/>
 
   {/* <TouchableOpacity style={styles.showButton} onPress={handleShowReport}>
     <Text style={styles.showButtonText}>Show Report</Text>

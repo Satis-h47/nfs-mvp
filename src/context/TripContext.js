@@ -73,10 +73,12 @@ export const TripProvider = ({ children }) => {
         }
       ];
 
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncAt, setLastSyncAt] = useState(null);
   const [trips, setTrips] = useState([]);
   const [user, setUser] = useState('Manager');
-  const [token, setToken] = useState('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1cy1lYXN0LTFfbG9jYWxzdGFjazphZG1pbi11c2VyLTAwMSIsImVtYWlsIjoiYWRtaW5AdHJhbmRhc3lzLmNvbSIsImdpdmVuX25hbWUiOiJTeXN0ZW0iLCJmYW1pbHlfbmFtZSI6IkFkbWluaXN0cmF0b3IiLCJjb2duaXRvOmdyb3VwcyI6WyJBZG1pbmlzdHJhdG9ycyJdLCJjb2duaXRvOnVzZXJuYW1lIjoiYWRtaW5AdHJhbmRhc3lzLmNvbSIsImN1c3RvbTplbnRpdHlBc3NpZ25tZW50cyI6IltdIiwiY3VzdG9tOmlzU3VwZXJBZG1pbiI6InRydWUiLCJpc3MiOiJodHRwczovL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tL3VzLWVhc3QtMV8xMjM0NTY3ODkiLCJhdWQiOiIxMjM0NTY3ODlhYmNkZWYiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6ImF3cy5jb2duaXRvLnNpZ25pbi51c2VyLmFkbWluIiwiYXV0aF90aW1lIjoxNzY3MTU2MDY0LCJleHAiOjE3NjcyNDI0NjQsImlhdCI6MTc2NzE1NjA2NH0.MCy2aOGvAdMQwnDMVPnsAOvAEmxCroYM_jSrT3TuSPo');
- const globalApi = Platform.OS === 'ios' ? 'https://g7uptifgme.execute-api.localhost.localstack.cloud:4566/api' : 'http://192.168.1.94:4566/restapis/3iizmbsdom/api/_user_request_'
+  const [token, setToken] = useState('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1cy1lYXN0LTFfbG9jYWxzdGFjazphZG1pbi11c2VyLTAwMSIsImVtYWlsIjoiYWRtaW5AdHJhbmRhc3lzLmNvbSIsImdpdmVuX25hbWUiOiJTeXN0ZW0iLCJmYW1pbHlfbmFtZSI6IkFkbWluaXN0cmF0b3IiLCJjb2duaXRvOmdyb3VwcyI6WyJBZG1pbmlzdHJhdG9ycyJdLCJjb2duaXRvOnVzZXJuYW1lIjoiYWRtaW5AdHJhbmRhc3lzLmNvbSIsImN1c3RvbTplbnRpdHlBc3NpZ25tZW50cyI6IltdIiwiY3VzdG9tOmlzU3VwZXJBZG1pbiI6InRydWUiLCJpc3MiOiJodHRwczovL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tL3VzLWVhc3QtMV8xMjM0NTY3ODkiLCJhdWQiOiIxMjM0NTY3ODlhYmNkZWYiLCJ0b2tlbl91c2UiOiJhY2Nlc3MiLCJzY29wZSI6ImF3cy5jb2duaXRvLnNpZ25pbi51c2VyLmFkbWluIiwiYXV0aF90aW1lIjoxNzY5MDU0OTY4LCJleHAiOjE3NjkxNDEzNjgsImlhdCI6MTc2OTA1NDk2OH0.bCg_TFlcyu0BqEMFtdTqQO9Yaymvh9a7SE_1sFEKOpk');
+ const globalApi = Platform.OS === 'ios' ? 'https://xifbfy1wkp.execute-api.localhost.localstack.cloud:4566/api' : 'http://192.168.0.128:4566/restapis/xifbfy1wkp/api/_user_request_'
 // console.log(Platform.OS, globalApi)
  const addTrip = (trip) => setTrips([trip, ...trips]);
 const deleteTrip = (id) => setTrips(trips.filter((t) => t.id !== id))
@@ -98,7 +100,11 @@ const deleteTrip = (id) => setTrips(trips.filter((t) => t.id !== id))
   };
   
   return (
-    <TripContext.Provider value={{theme, toggleTheme, trips, globalApi,getTrip, addTrip, setTrips, user, UpdateUser, updateTrip, token, UpdateToken, deleteTrip }}>
+    <TripContext.Provider value={{theme, toggleTheme, trips, globalApi,getTrip, addTrip, setTrips, user, UpdateUser, updateTrip, token, UpdateToken, deleteTrip, 
+        isSyncing,
+        setIsSyncing,
+        lastSyncAt,
+        setLastSyncAt}}>
       {children}
     </TripContext.Provider>
   );

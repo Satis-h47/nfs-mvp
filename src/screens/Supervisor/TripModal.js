@@ -4,6 +4,10 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image, Button, Te
 import { useTrips } from '../../context/TripContext';
 import GoBack from '../../components/GoBack';
 import Dropdown from '../../components/Dropdown';
+import NetInfo from '@react-native-community/netinfo';
+import { queueStatusUpdate } from '../../offline/statusQueue';
+
+import Toast from '../../components/Toast';
 
 const example =     {
       "id": "dbb5c125-bea1-4bdd-9cda-87e4baa771fe",
@@ -51,9 +55,18 @@ const displayLabels = {
   cancelled:"Cancelled",
   returned:"Returned"
 }
+  const actionColors = {
+  draft : "blue",
+  pending: 'orange',
+  in_transit:"orange",
+  delivered:"green",
+  received:"green",
+  cancelled:"red",
+  returned:"green"
+};
 
 const TripModal = ({ navigation, route }) => {
-  // console.log("source",route.params.source)
+  console.log("source",route.params.shipment )
   const { user, trips, getTrip, updateTrip, token, deleteTrip, globalApi, theme } = useTrips();
   const { shipment: routeShipment } = route.params || {}; // Get shipment data passed from form
 
@@ -71,8 +84,18 @@ const [listTV, setListTV] = useState(() => {
   const [listOV, setListOV] = useState('draft');
       const [listThV, setListThV] = useState('in_transit');
 
-      console.log(listTV,"da", user)
+      // console.log(listTV,"da", user)
 
+        const [toast, setToast] = useState({
+    visible: false,
+    message: '',
+    type: 'success',
+  });
+
+  const showToast = (message, type = 'success') => {
+    setToast({ visible: true, message, type });
+  };
+  
         useEffect(() => {
     if (trips) {
       const foundShipment = getTrip(routeShipment.id);
@@ -93,7 +116,7 @@ useEffect(() => {
     .then(response => response.json())
     .then(data => {
       const firstLegId = data?.data?.legs?.[0]?.id;
-      console.log(data, 'legId:', firstLegId);
+      // console.log(data, 'legId:', firstLegId);
 
       setLegId(firstLegId);
     })
@@ -130,12 +153,24 @@ const listThree = [
 ]
 
 const statusShipment = async () => {
+  if(!shipment?.id ){
+    console.error('Now possible now');
+    return;
+  }
+
   if (!legId) {
     console.error('Leg ID not available yet');
     return;
   }
-    console.log("token", token, legId, shipment?.id)
+    // console.log("token", token, legId, shipment?.id)
   try {
+  const netInfo = await NetInfo.fetch();
+      if (!netInfo.isConnected) {
+    updateTrip(shipment?.id, {...shipment, currentStatus: listTV.value});
+        queueStatusUpdate(shipment?.id, listTV.value);
+    return
+      }
+
     // 1️⃣ First API call
     const res = await fetch(
       `${globalApi}/shipments/${shipment?.id}/status`,
@@ -179,7 +214,7 @@ const statusShipment = async () => {
     );
 
     const legData = await legRes.json();
-    console.log(legData, "legData")
+    // console.log(legData, "legData")
 
     if (!legData?.success) {
       console.error('Error: Failed updating leg');
@@ -187,8 +222,8 @@ const statusShipment = async () => {
     }
 
     // success 🎉
-    console.log('Shipment and leg updated successfully');
-
+    // console.log('Shipment and leg updated successfully');
+showToast('Saved successfully!', 'success')
   } catch (error) {
     console.error('Error:', error);
   }
@@ -314,12 +349,12 @@ const statusShipment = async () => {
     }}
   >
     Status:{" "}
-    <Text style={{      color:
-        shipment?.currentStatus === "delivered"
-          ? "#28a745"
-          : shipment?.currentStatus === "in_transit"
-          ? "#ffc107"
-          : "#dc3545"
+    <Text style={{      color: actionColors[shipment?.currentStatus]
+        // shipment?.currentStatus === "delivered"
+        //   ? "#28a745"
+        //   : shipment?.currentStatus === "in_transit"
+        //   ? "#ffc107"
+        //   : "#dc3545"
           }}>
     {displayLabels[shipment?.currentStatus]}
     </Text>
@@ -619,6 +654,13 @@ const statusShipment = async () => {
         </TouchableOpacity>
         </View>
         </ScrollView>
+
+              <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ ...toast, visible: false })}
+      />
     </View>
   );
 };
